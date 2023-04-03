@@ -1,3 +1,42 @@
+# 給程式設計師
+## 如何使用 Git & Github
+- 參考資料：
+  - https://kopu.chat/git%E6%96%B0%E6%89%8B%E5%85%A5%E9%96%80%E6%95%99%E5%AD%B8-part-1/
+  - https://kopu.chat/git%e6%96%b0%e6%89%8b%e5%85%a5%e9%96%80%e6%95%99%e5%ad%b8-part-2/
+  - https://w3c.hexschool.com/git/7ca21e02
+  - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
+  - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
+### **簡介**
+> 我只是大略懂，還是**上網查** or **ChatGPT** 比較清楚！
+- Git 是**版本管理工具**，當你加了新功能，不小心把程式搞砸時，就可以用 Git 「**回朔**」，不用備分一堆「第 X 版」的程式，還可以「**合併**」兩個不同版本程式，除了讓開發時可以 分成除錯部分與新功能部份 等可能性，還可以用於多人合作！
+  - 我是學在終端機下指令，但好像不是必須，所以以下設定可能會因人而異
+  - 下載教學：https://w3c.hexschool.com/git/3f9497cd
+    - 我沒勾 Git Explorer Intergration，因為之前都沒用到
+    - default editor 我用 Notepad++，因為他說不要用預設的 Vim
+    - Terminal Emulator 我用 cmd.exe，因為不想多載 MSYS2 (Minimal SYStem 2，很多工具的組合包) 的 MinTTY，之後覺得 cmd 難用再換
+- Github 是**上傳Git專案的平台**，第一次上傳後就包含所有版本，可以供任何人下載至他的本地端Git，做好更新後可再上傳，達到「**遠端分工、分享**」專案的效果
+  - 請去 [Github官網](https://github.com/) 註冊一個帳號吧！
+- 常用 cmd.exe ( windows 的命令提示字元、終端機) 的指令：
+  - `cd ..`：把目前 cmd 所在的路徑退一個資料夾
+  - `cd <資料夾名>`：把路徑移至資料夾
+  - git 指令都需要在想要修改的專案資料夾路徑下，下指令對其修改
+
+## **在新專案開始用 Git**
+```
+git init
+git add .
+git commit -m "Initialize project"
+```
+- 指令意義:
+  1. 創立 repository (簡稱repo)，並有分支 (branch) 名為 **master**
+  2. 掃描所有檔案，準備好已變動的檔案 準備 committ ( **.** 是指「所有」的意思)
+  3. Commit (紀錄至 Git)！ 創立 revision (版本) 叫做 "Initialize project" (**-m** 是指 **m**essage)
+
+## **從 Github 上抓下 Git 專案**
+```
+
+```
+
 # For Programmers
 ## How to use Git & Github
 - Online Guidence:
@@ -61,6 +100,7 @@ git push -u ProgrammingFinalProject master
    - if you push a new branch that Github don't have, it will create it 
    - `-u` set the local **master** branch as a remote **master** branch ( main branch, or **upstream** ) so all changes will be started from here, beforehand are all the same ( **SUPER UNSURE** ) 
    - PS: I'm still not very sure all of the correctness of this information
+### **Github Cooperation**
 
 
 
