@@ -14,14 +14,21 @@
     - 我沒勾 Git Explorer Intergration，因為之前都沒用到
     - default editor 我用 Notepad++，因為他說不要用預設的 Vim
     - Terminal Emulator 我用 cmd.exe，因為不想多載 MSYS2 (Minimal SYStem 2，很多工具的組合包) 的 MinTTY，之後覺得 cmd 難用再換
+  - 第一次下載完需要設定你是誰：
+    ```
+    git config --global user.name "<暱稱>"
+    git config --global user.email <Email帳號>
+    ```
+    - `--global`：指「所有在此電腦的 Git 專案」都是此設定
+    - 如果想取名「Joe」，那指令為：`git config --global user.name "Joe"`
+
 - Github 是**上傳Git專案的平台**，第一次上傳後就包含所有版本，可以供任何人下載至他的本地端Git，做好更新後可再上傳，達到「**遠端分工、分享**」專案的效果
   - 請去 [Github官網](https://github.com/) 註冊一個帳號吧！
 - 常用 cmd.exe ( windows 的命令提示字元、終端機) 的指令：
   - `cd ..`：把目前 cmd 所在的路徑退一個資料夾
-  - `cd <資料夾名>`：把路徑移至資料夾
-  - git 指令都需要在想要修改的專案資料夾路徑下，下指令對其修改
-
-## **在新專案開始用 Git**
+  - `cd C_programming`在想要修改的專案資料夾路徑下，下指令對其修改
+---
+### **在新專案開始用 Git**
 ```
 git init
 git add .
@@ -32,11 +39,51 @@ git commit -m "Initialize project"
   2. 掃描所有檔案，準備好已變動的檔案 準備 committ ( **.** 是指「所有」的意思)
   3. Commit (紀錄至 Git)！ 創立 revision (版本) 叫做 "Initialize project" (**-m** 是指 **m**essage)
 
-## **從 Github 上抓下 Git 專案**
+### **第一次上傳 Github**
 ```
-
+git remote add ProgrammingFinalProject <專案URL>
+git push -u ProgrammingFinalProject master
 ```
+1. 新增 Remote Repo 叫做 **ProgrammingFinalProject** (by Github 上開的 URL)
+2. 把 **master** 叫的 local branch 更新到叫 **master** 的 remote branch 上
+   - Git 會嘗試找到叫 **master** 的 local branch ，沒找到會停止 push
+   - 如果在 remote 沒有叫 **master** 的 branch，會創立一個
+   - `-u` 把已推完的 remote branch **master** 視為 upstream，之後只要下 `git push`，不用再下更多參數，就可以對直接對此 upstream 更新 (**超不確定**) 
+   - PS: 我非常不確定，請看 [Git官方介紹](https://git-scm.com/docs/git-push) 應該比較好，也有很多例子可看
 
+### **第一次從 Github 上抓下 Git 專案**
+```
+git clone <專案的 URL>
+cd <專案名>
+git remote rename origin <新名字>
+```
+- 指令意義:
+  1. 把整個專案複製到終端機所在資料夾中，預設名稱為 Github 上的專案名
+  2. 因為 remote repo 是各別專案不同的，所以要先到專案中才行
+  3. 因預設 remote 名是 origin (與第一個人 push 時用的 remote 名無關)，所以可用此重新命名 remote 
+
+### **分支 (branch)**
+- 簡介：
+  - 在一個分支上做更新 (commit)，更新完後再合併分支，可避免主要分支被搞砸，還可以把功能分開開發，是分工的好工具
+
+- 創立 branch
+  ```
+  git branch new_function
+  git checkout new_function
+  ```
+  1. 創立叫 **new_function** 分支
+  2. 把現在正在編輯的分支，移動到 **new_function**
+- 合併 (Merge) branch
+  ```
+  git checkout master
+  git merge new_function
+  ```
+  1. 把現在正在編輯的分支，移動到 **master**
+  2. 把 **new_function** 合併到 **master**
+- 刪除現在正在編輯的 branch 
+  ```
+  git branch -d
+  ```
 # For Programmers
 ## How to use Git & Github
 - Online Guidence:
@@ -96,7 +143,7 @@ git push -u ProgrammingFinalProject master
 1. Add a Remote Repo called **ProgrammingFinalProject** (by URL)
 2. Push a local branch named **master** to remote branch named **master**
    - **master** you gave in the command means **target romote branch name**
-   - Git will find local branch have the same name with **master** as stuff to push
+   - `WRONG` Git will find local branch have the same name with **master** as stuff to push
    - if you push a new branch that Github don't have, it will create it 
    - `-u` set the local **master** branch as a remote **master** branch ( main branch, or **upstream** ) so all changes will be started from here, beforehand are all the same ( **SUPER UNSURE** ) 
    - PS: I'm still not very sure all of the correctness of this information
