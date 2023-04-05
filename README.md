@@ -38,7 +38,7 @@ git commit -m "Initialize project"
   1. 創立 repository (簡稱repo)，並有分支 (branch) 名為 **master**
   2. 掃描所有檔案，準備好已變動的檔案 準備 committ ( **.** 是指「所有」的意思)
   3. Commit (紀錄至 Git)！ 創立 revision (版本) 叫做 "Initialize project" (**-m** 是指 **m**essage)
-
+- 所以之後只要重複 2. 3.，就可以提交新的 revision
 ### **第一次上傳 Github**
 ```
 git remote add ProgrammingFinalProject <專案URL>
@@ -50,7 +50,7 @@ git push -u ProgrammingFinalProject master
    - 如果在 remote 沒有叫 **master** 的 branch，會創立一個
    - `-u` 把已推完的 remote branch **master** 視為 upstream，之後只要下 `git push`，不用再下更多參數，就可以對直接對此 upstream 更新 (**超不確定**) 
    - PS: 我非常不確定，請看 [Git官方介紹](https://git-scm.com/docs/git-push) 應該比較好，也有很多例子可看
-
+- 所以之後只要執行 2. (可不加 `-u`)，就可以把更新 push 到 Remote Repo
 ### **第一次從 Github 上抓下 Git 專案**
 ```
 git clone <專案的 URL>
@@ -79,75 +79,38 @@ git remote rename origin <新名字>
   git merge new_function
   ```
   1. 把現在正在編輯的分支，移動到 **master**
-  2. 把 **new_function** 合併到 **master**
+  2. 把 **new_function** 合併到 **master** ( **new_function** 分支仍存在)
 - 刪除現在正在編輯的 branch 
   ```
   git branch -d
   ```
-# For Programmers
-## How to use Git & Github
-- Online Guidence:
-  - https://kopu.chat/git%E6%96%B0%E6%89%8B%E5%85%A5%E9%96%80%E6%95%99%E5%AD%B8-part-1/
-  - https://kopu.chat/git%e6%96%b0%e6%89%8b%e5%85%a5%e9%96%80%e6%95%99%e5%ad%b8-part-2/
-  - https://w3c.hexschool.com/git/7ca21e02
-  - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
-  - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
-### **Initialize Git**
-( in project's root folder )
-```
-git init
-git add .
-git commit -m "Initialize project"
-```
-- Command Meaning:
-1. Creat repository **master** ( the main branch )
-2. ready the files to be committed ( **.** means all files)
-3. Commit files! Create revision called "Initialize project" (**-m** stands for **m**essage)
-### **Branches**
-- Creat branch
-  ```
-  git branch new_function
-  git checkout new_function
-  ```
-  1. Creat a branch called **new_function**
-  2. Move now working branch to **new_function**
-- Merge branch
-  ```
-  git checkout master
-  git merge new_function
-  ```
-  1. Move now working branch to **master**
-  2. Merge **new_function** to **master**
-- Delete branch 
-  ```
-  git branch -d
-  ```
-### **Checking Git**
-- Check out what **branch** am I and which file did I modify ( still not commit ) 
+### **檢視一些 Git 東西**
+- 檢視現在工作的 **branch** + 修改過，但未 commmit 的檔案
     ```
     git status
     ```
-- Check out all **commit**
+- 圖示化 (`--graph`) 所有的 **commit**
     ```
-    git log
+    git log --graph --oneline
     ```
-- Check out all **branches** ( and what branch we are in )
+    `--oneline`：讓每次的 commit 只顯示一行訊息
+
+- 檢視所有 **branches** + 現在工作的 **branch** 
     ```
-    git branch -a
+    git branch
     ```
-### **First Upload to Github**
-```
-git remote add ProgrammingFinalProject <the url>
-git push -u ProgrammingFinalProject master
-```
-1. Add a Remote Repo called **ProgrammingFinalProject** (by URL)
-2. Push a local branch named **master** to remote branch named **master**
-   - **master** you gave in the command means **target romote branch name**
-   - `WRONG` Git will find local branch have the same name with **master** as stuff to push
-   - if you push a new branch that Github don't have, it will create it 
-   - `-u` set the local **master** branch as a remote **master** branch ( main branch, or **upstream** ) so all changes will be started from here, beforehand are all the same ( **SUPER UNSURE** ) 
-   - PS: I'm still not very sure all of the correctness of this information
-### **Github Cooperation**
+### **上傳、下載**
+- 
+
+### **Github 多人合作**
+- **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
+- ***更新功能流程***：
+  1. 把 
+
+
+
+
+
 
 
 
@@ -206,9 +169,6 @@ git push -u ProgrammingFinalProject master
     - PS: I'm still not very sure how to use this function
 ### **Common Rules**
 - Chinese: https://github.com/sparanoid/chinese-copywriting-guidelines
-
-
-###
 
 
 # For Users 
