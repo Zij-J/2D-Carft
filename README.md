@@ -6,6 +6,7 @@
   - https://w3c.hexschool.com/git/7ca21e02
   - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
   - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
+  - https://www.maxlist.xyz/2020/05/03/git-reset-checkout/
 ### **簡介**
 > 我只是大略懂，還是**上網查** or **ChatGPT** 比較清楚！
 - Git 是**版本管理工具**，當你加了新功能，不小心把程式搞砸時，就可以用 Git 「**回朔**」，不用備分一堆「第 X 版」的程式，還可以「**合併**」兩個不同版本程式，除了讓開發時可以 分成除錯部分與新功能部份 等可能性，還可以用於多人合作！
@@ -38,7 +39,7 @@ git commit -m "Initialize project"
   1. 創立 repository (簡稱repo)，並有分支 (branch) 名為 **master**
   2. 掃描所有檔案，準備好已變動的檔案 準備 committ ( **.** 是指「所有」的意思)
   3. Commit (紀錄至 Git)！ 創立 revision (版本) 叫做 "Initialize project" (**-m** 是指 **m**essage)
-
+- 所以之後只要重複 2. 3.，就可以提交新的 revision
 ### **第一次上傳 Github**
 ```
 git remote add ProgrammingFinalProject <專案URL>
@@ -50,7 +51,7 @@ git push -u ProgrammingFinalProject master
    - 如果在 remote 沒有叫 **master** 的 branch，會創立一個
    - `-u` 把已推完的 remote branch **master** 視為 upstream，之後只要下 `git push`，不用再下更多參數，就可以對直接對此 upstream 更新 (**超不確定**) 
    - PS: 我非常不確定，請看 [Git官方介紹](https://git-scm.com/docs/git-push) 應該比較好，也有很多例子可看
-
+- 所以之後只要執行 2. (可不加 `-u`)，就可以把更新 push 到 Remote Repo
 ### **第一次從 Github 上抓下 Git 專案**
 ```
 git clone <專案的 URL>
@@ -71,7 +72,7 @@ git remote rename origin <新名字>
   git branch new_function
   git checkout new_function
   ```
-  1. 創立叫 **new_function** 分支
+  1. 用目前所在的版本，創立叫 **new_function** 分支
   2. 把現在正在編輯的分支，移動到 **new_function**
 - 合併 (Merge) branch
   ```
@@ -79,75 +80,60 @@ git remote rename origin <新名字>
   git merge new_function
   ```
   1. 把現在正在編輯的分支，移動到 **master**
-  2. 把 **new_function** 合併到 **master**
+  2. 把 **new_function** 合併到 **master** ( **new_function** 分支仍存在)
 - 刪除現在正在編輯的 branch 
   ```
   git branch -d
   ```
-# For Programmers
-## How to use Git & Github
-- Online Guidence:
-  - https://kopu.chat/git%E6%96%B0%E6%89%8B%E5%85%A5%E9%96%80%E6%95%99%E5%AD%B8-part-1/
-  - https://kopu.chat/git%e6%96%b0%e6%89%8b%e5%85%a5%e9%96%80%e6%95%99%e5%ad%b8-part-2/
-  - https://w3c.hexschool.com/git/7ca21e02
-  - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
-  - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
-### **Initialize Git**
-( in project's root folder )
-```
-git init
-git add .
-git commit -m "Initialize project"
-```
-- Command Meaning:
-1. Creat repository **master** ( the main branch )
-2. ready the files to be committed ( **.** means all files)
-3. Commit files! Create revision called "Initialize project" (**-m** stands for **m**essage)
-### **Branches**
-- Creat branch
-  ```
-  git branch new_function
-  git checkout new_function
-  ```
-  1. Creat a branch called **new_function**
-  2. Move now working branch to **new_function**
-- Merge branch
-  ```
-  git checkout master
-  git merge new_function
-  ```
-  1. Move now working branch to **master**
-  2. Merge **new_function** to **master**
-- Delete branch 
-  ```
-  git branch -d
-  ```
-### **Checking Git**
-- Check out what **branch** am I and which file did I modify ( still not commit ) 
+### **檢視一些 Git 東西**
+- 檢視現在工作的 **branch** + 修改過，但未 commmit 的檔案
     ```
     git status
     ```
-- Check out all **commit**
+- 圖示化 (`--graph`) 所有的 **commit**
     ```
-    git log
+    git log --graph --oneline --all
     ```
-- Check out all **branches** ( and what branch we are in )
+    `--oneline`：讓每次的 commit 只顯示一行訊息   
+    `--all`：有些 commit 可能被省略，要求全部顯示
+
+- 檢視所有 **branches** + 現在工作的 **branch** 
     ```
-    git branch -a
+    git branch
     ```
-### **First Upload to Github**
-```
-git remote add ProgrammingFinalProject <the url>
-git push -u ProgrammingFinalProject master
-```
-1. Add a Remote Repo called **ProgrammingFinalProject** (by URL)
-2. Push a local branch named **master** to remote branch named **master**
-   - **master** you gave in the command means **target romote branch name**
-   - `WRONG` Git will find local branch have the same name with **master** as stuff to push
-   - if you push a new branch that Github don't have, it will create it 
-   - `-u` set the local **master** branch as a remote **master** branch ( main branch, or **upstream** ) so all changes will be started from here, beforehand are all the same ( **SUPER UNSURE** ) 
-   - PS: I'm still not very sure all of the correctness of this information
-### **Github Cooperation**
+### **上傳、下載**
+- **Git 更新版本**
+  ```
+  git add .
+  git commit -m "Changed XXX"
+  ```
+  這筆 commit 會給**目前的 branch**
+- **Git 版本回朔**
+  ```
+  git checkout HEAD~1
+  git branch -m <原本 branch 名> <要丟棄的 branch 名>
+  git branch <原本 branch 名>
+  git branch -d <要丟棄的 branch 名>
+  ```
+  - 指令意義：
+    1. 把目前的檔案變成上**1**個 commit (`HEAD~1`的**1**) (可以 `HEAD~1` 改成 `566b300` 等在 `git log` 會出現的版本號，就可以回復到指定版本)
+    2. 因為 1. 的步驟會把「原本 branch 的尾」與「HEAD (目前所在版本)」分離，如果再對此 commit ，會產生新的 commit路徑，同**新增「未命名的 branch」**，所以要把名稱換到新的 branch 上，並說舊的 branch 是寫錯的 (`-m` 是 **m**ove，所以實際上是 創了一個新名字的 branch，把舊名字的 branch 移到此，並刪除)
+    3. 把**目前的 branch** 重新命名為正確的 branch
+    4. 把 HEAD 與目前的 branch 連結，有新的 commit 時 branch 頭才會一起前進
+    5. 之後 (代表做完 1. 到 3. 就可以正常 commit 了)，如果確定真的用不到要丟棄的 branch，就刪掉！(如果一開始就很確定用不到，可用 `git reset --hard <想留的版本號>` ，一行強制**刪除想留的版本之後的所有 commit** ，`--hard` 不加會使想刪除的變動改到想留的版本，所以須加)
+  - 此需要在所有變動都已 commit 之下才能做，不然變動會被消失
+
+
+
+### **Github 多人合作**
+- **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
+- ***更新功能流程***：
+  1. 把 
+
+
+
+
+
 
 
 
@@ -206,9 +192,6 @@ git push -u ProgrammingFinalProject master
     - PS: I'm still not very sure how to use this function
 ### **Common Rules**
 - Chinese: https://github.com/sparanoid/chinese-copywriting-guidelines
-
-
-###
 
 
 # For Users 
