@@ -132,6 +132,7 @@ git remote rename origin <新名字>
   git pull <取的 Remote Repo 名> <要下載的 Remote branch 名>
   ```
   - 與 push 不同，他會直接把下載的東西 Merge 到**目前個工作分支**
+  - 可用 `git pull <取的 Remote Repo 名> <Remote branch名>:<Local branch名>`來指定要 pull 給的目標 local 分支
 ### **Github 多人合作**
 - **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
 - ***更新功能流程***：
@@ -141,7 +142,7 @@ git remote rename origin <新名字>
   4. 去 Github，找到 **branches** > **Active branches**，應可找到叫「子捷」的 branch，請按旁邊的 **New Pull Request**，發出「我想合併到 master 的訊息」
   5. **？需要一個人測試 ok 並留言？** (測試者在自己的 local master 新增 子捷branch，然後 pull Remote 的 子捷branch，就可測試)
   6. 測試通過，在 Github 的 **Pull Request** 按 **Merge Pull Request** > **Confirm Pull Request**，成功把 Remote 的 子捷branch 與 Remote master 合併
-  7. 所有人，把新的 Remote master pull到自己的 local master：`git pull <Remote> master`
+  7. 所有人，把新的 Remote master pull到自己的 local master：`git pull <Remote> master:master`
   8. 非此功能修改者，把新的 local master merge 到自己正在寫 branch 中，並手動處理、更改其中可能的衝突：`git merge master`，就完成大家同步了！
 
 
@@ -205,6 +206,7 @@ git remote rename origin <新名字>
 ***
 ### **顯示圖片 in C**
 - SDL2？ChatGTP給的範例：
+- example of how to modify the SDL_Rect structure to place the image at the position (100, 100) in the window:
   ```c
   #include <SDL2/SDL.h>
 
