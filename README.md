@@ -113,7 +113,8 @@ git remote rename origin <新名字>
   git checkout <新 branch 名>
   ```
   - 指令意義：
-    1. 把目前的檔案
+    1. 把目前的檔案 (可以`HEAD~1`改成)
+    2. 
 
   - 此需要在所有變動都已 commit 之下才能做，不然變動會被消失
 
