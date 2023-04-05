@@ -202,5 +202,9 @@ git remote rename origin <新名字>
 ### **常見共通準則**
 - 中文: https://github.com/sparanoid/chinese-copywriting-guidelines
 
+***
+### **顯示圖片 in C**
+SDL2？
+
 # For Users 
 - 
