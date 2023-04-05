@@ -202,5 +202,59 @@ git remote rename origin <新名字>
 ### **常見共通準則**
 - 中文: https://github.com/sparanoid/chinese-copywriting-guidelines
 
+***
+### **顯示圖片 in C**
+- SDL2？ChatGTP給的範例：
+  ```c
+  #include <SDL2/SDL.h>
+
+  int main(int argc, char* argv[]) {
+      SDL_Window* window = NULL;
+      SDL_Surface* surface = NULL;
+      SDL_Surface* image = NULL;
+
+      // Initialize SDL
+      if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+          printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+          return 1;
+      }
+
+      // Create window
+      window = SDL_CreateWindow("Image Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+      if (window == NULL) {
+          printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+          return 1;
+      }
+
+      // Load image
+      image = SDL_LoadBMP("image.bmp");
+      if (image == NULL) {
+          printf("Unable to load image! SDL_Error: %s\n", SDL_GetError());
+          return 1;
+      }
+
+      // Create surface and blit the image onto it at position (100, 100)
+      surface = SDL_GetWindowSurface(window);
+      SDL_Rect dest_rect = {100, 100, image->w, image->h};
+      SDL_BlitSurface(image, NULL, surface, &dest_rect);
+      SDL_UpdateWindowSurface(window);
+
+      // Wait for window to close
+      SDL_Event e;
+      while (1) {
+          if (SDL_PollEvent(&e) && e.type == SDL_QUIT) {
+              break;
+          }
+      }
+
+      // Cleanup
+      SDL_FreeSurface(image);
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      return 0;
+  }
+  ```
+
+
 # For Users 
 - 
