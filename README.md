@@ -118,8 +118,10 @@ git remote rename origin <新名字>
     1. 把目前的檔案變成上**1**個 commit (`HEAD~1`的**1**) (可以 `HEAD~1` 改成 `566b300` 等在 `git log` 會出現的版本號，就可以回復到指定版本)
     2. 因為 1. 的步驟會把「原本 branch 的尾」與「HEAD (目前所在版本)」分離，如果再對此 commit ，會產生新的 commit路徑，同**新增「未命名的 branch」**，所以要把名稱換到新的 branch 上，並說舊的 branch 是寫錯的 (`-m` 是 **m**ove，所以實際上是 創了一個新名字的 branch，把舊名字的 branch 移到此，並刪除)
     3. 把**目前的 branch** 重新命名為正確的 branch
-    4. 如果確定真的用不到要丟棄的 branch，就刪掉！(如果一開始就很確定用不到，可用 `git reset --hard <想留的版本號>` ，一行強制**刪除想留的版本之後的所有 commit** ，`--hard` 不加會使想刪除的變動改到想留的版本，所以須加)
+    4. 之後 (代表做完 1. 到 3. 就可以正常 commit 了)，如果確定真的用不到要丟棄的 branch，就刪掉！(如果一開始就很確定用不到，可用 `git reset --hard <想留的版本號>` ，一行強制**刪除想留的版本之後的所有 commit** ，`--hard` 不加會使想刪除的變動改到想留的版本，所以須加)
   - 此需要在所有變動都已 commit 之下才能做，不然變動會被消失
+
+
 
 ### **Github 多人合作**
 - **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
