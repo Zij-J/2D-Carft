@@ -108,9 +108,12 @@ git remote rename origin <新名字>
   ```
   這筆 commit 會給**目前的 branch**
 - **Git 版本回朔**
-  ```
+  ```c
   git checkout HEAD~1
-  ...
+  git branch <暫時branch名>
+  ... //一些在 暫時branch 的 commit 
+  git checkout <原本branch名>
+  git reset --hard
   git merge <原本branch名>
   ```
   - 指令意義：
