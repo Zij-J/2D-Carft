@@ -6,6 +6,7 @@
   - https://w3c.hexschool.com/git/7ca21e02
   - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
   - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
+  - https://www.maxlist.xyz/2020/05/03/git-reset-checkout/
 ### **簡介**
 > 我只是大略懂，還是**上網查** or **ChatGPT** 比較清楚！
 - Git 是**版本管理工具**，當你加了新功能，不小心把程式搞砸時，就可以用 Git 「**回朔**」，不用備分一堆「第 X 版」的程式，還可以「**合併**」兩個不同版本程式，除了讓開發時可以 分成除錯部分與新功能部份 等可能性，還可以用於多人合作！
@@ -71,7 +72,7 @@ git remote rename origin <新名字>
   git branch new_function
   git checkout new_function
   ```
-  1. 創立叫 **new_function** 分支
+  1. 用目前所在的版本，創立叫 **new_function** 分支
   2. 把現在正在編輯的分支，移動到 **new_function**
 - 合併 (Merge) branch
   ```
@@ -100,7 +101,22 @@ git remote rename origin <新名字>
     git branch
     ```
 ### **上傳、下載**
-- 
+- **Git 更新版本**
+  ```
+  git add .
+  git commit -m "Changed XXX"
+  ```
+  這筆 commit 會給**目前的 branch**
+- **Git 版本回朔**
+  ```
+  git checkout HEAD~1
+  git checkout <新 branch 名>
+  ```
+  - 指令意義：
+    1. 把目前的檔案
+
+  - 此需要在所有變動都已 commit 之下才能做，不然變動會被消失
+
 
 ### **Github 多人合作**
 - **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
