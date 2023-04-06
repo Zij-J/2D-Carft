@@ -113,11 +113,12 @@ git remote rename origin <新名字>
   git checkout HEAD~1
   git branch -m <原本 branch 名> <要丟棄的 branch 名>
   git branch <原本 branch 名>
+  git checkout <原本 branch 名>
   git branch -D <要丟棄的 branch 名>
   ```
   - 指令意義：
     1. 把目前的檔案變成上**1**個 commit (`HEAD~1`的**1**) (可以 `HEAD~1` 改成 `566b300` 等在 `git log` 會出現的版本號，就可以回復到指定版本)
-    2. 因為 1. 的步驟會把「原本 branch 的尾」與「HEAD (目前所在版本)」分離，如果再對此 commit ，會產生新的 commit路徑，同**新增「未命名的 branch」**，所以要把名稱換到新的 branch 上，並說舊的 branch 是寫錯的 (`-m` 是 **m**ove，所以實際上是 創了一個新名字的 branch，把舊名字的 branch 移到此，並刪除)
+    2. 因為 1. 的步驟會把「原本 branch 的尾」與「HEAD (目前所在版本)」分離，如果再對此 commit ，會產生新的 commit路徑，同**新增「未命名的 branch」**，所以為了把名稱換到新的 branch 上，要把舊的 branch 重新命名成是寫錯的 (`-m` 是 **m**ove，所以實際上是 創了一個新名字的 branch，把舊名字的 branch 移到此，並刪除)
     3. 在 **目前的版本開一個正確的 branch**
     4. **把 HEAD 與正確的 branch 連結**，有新的 commit 時 branch 頭才會一起前進
     5. 之後 (代表做完 1. 到 4. 就可以正常 commit 了)，如果確定真的用不到要丟棄的 branch，就刪掉 (`-D` 是指 未 Merge 的 branch 也刪除) ！
