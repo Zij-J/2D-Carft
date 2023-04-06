@@ -97,9 +97,9 @@ git remote rename origin <新名字>
     `--oneline`：讓每次的 commit 只顯示一行訊息   
     `--all`：有些 commit 可能被省略，要求全部顯示
     ```
-    gitk
+    gitk --all
     ```
-    這可以直接開啟叫做 gitk 的程式，上面就有漂亮的圖示了！
+    這可以直接開啟叫做 gitk 的程式，上面就有漂亮的圖示了 (`--all` 也是要求全部顯示的意思)！
 
 - 檢視所有 **branches** + 現在工作的 **branch** 
     ```
