@@ -81,9 +81,9 @@ git remote rename origin <新名字>
   ```
   1. 把現在正在編輯的分支，移動到 **master**
   2. 把 **new_function** 合併到 **master** ( **new_function** 分支仍存在)
-- 刪除現在正在編輯的 branch 
+- 刪除叫 **branch_name** 的 branch 
   ```
-  git branch -d
+  git branch -d branch_name
   ```
 ### **檢視一些 Git 東西**
 - 檢視現在工作的 **branch** + 修改過，但未 commmit 的檔案
@@ -209,58 +209,145 @@ git remote rename origin <新名字>
 - 中文: https://github.com/sparanoid/chinese-copywriting-guidelines
 
 ***
-### **顯示圖片 in C**
-- SDL2？ChatGTP給的範例：
-- example of how to modify the SDL_Rect structure to place the image at the position (100, 100) in the window:
-  ```c
-  #include <SDL2/SDL.h>
+## **顯示圖片 in C (SDL_2)**
+- SDL2：Simple DirectMedia Layer，總之就是能顯示視窗、圖片的C函式庫！
+- SDL2_image：SDL 的擴充，原本只能顯示 bmp 格式的圖片，有了這個擴充就幾乎所有圖片格式都可以顯示
+### **下載 (Windows + MinGW)**
+1. 首先是 **SDL2**，去 [官網](https://github.com/libsdl-org/SDL/releases/tag/release-2.26.5) 下載 `SDL2-devel-2.26.5-mingw.zip` 或 `SDL2-devel-2.26.5-mingw.tar.gz` ，都一樣是壓縮檔
+2. 打開壓縮檔，到 `x86_64-w64-mingw32` (大家應該都是 64 bits 吧) > `include`，裡面只有叫 `SDL2` 的資料夾，那裡有所有的 header file，所以把 `SDL2` 貼到與我們的 `main.c` 同一個資料夾中
+3. 到剛剛的 `x86_64-w64-mingw32` > `bin`，有一個叫 `SDL2.dll` 的東西，是他們把一坨 .c 檔編譯成一個檔案，只要有 linker 連接我們的 `main.c` 就能用，所以也把他貼到與我們的 `main.c` 同一個資料夾中
+4. 下載完了！試試以下範例：
+    ```c
+    #include <stdio.h>
+    #include "SDL2\SDL.h"
+    #undef main //必須加！SDL很奇怪地把 main 用 Macro 定義了，導致 int main 會被修掉，所以要 undef 掉
 
-  int main(int argc, char* argv[]) {
-      SDL_Window* window = NULL;
-      SDL_Surface* surface = NULL;
-      SDL_Surface* image = NULL;
+    int main(int argc, char** argv) {
+        // Initialize SDL
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError()); //stderr是專門輸出錯誤訊息的地方，而fprintf可以把訊息print到非stdio的地方
+            return 1;
+        }
 
-      // Initialize SDL
-      if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-          printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-          return 1;
-      }
+        // Create window
+        SDL_Window* window = SDL_CreateWindow("SDL Window Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+        if (!window) {
+            fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+            SDL_Quit();
+            return 1;
+        }
 
-      // Create window
-      window = SDL_CreateWindow("Image Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
-      if (window == NULL) {
-          printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-          return 1;
-      }
+        // Wait for user to quit
+        SDL_Event event;
+        while (SDL_WaitEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                break;
+            }
+        }
 
-      // Load image
-      image = SDL_LoadBMP("image.bmp");
-      if (image == NULL) {
-          printf("Unable to load image! SDL_Error: %s\n", SDL_GetError());
-          return 1;
-      }
+        // Destroy window
+        SDL_DestroyWindow(window);
 
-      // Create surface and blit the image onto it at position (100, 100)
-      surface = SDL_GetWindowSurface(window);
-      SDL_Rect dest_rect = {100, 100, image->w, image->h};
-      SDL_BlitSurface(image, NULL, surface, &dest_rect);
-      SDL_UpdateWindowSurface(window);
+        // Quit SDL
+        SDL_Quit();
 
-      // Wait for window to close
-      SDL_Event e;
-      while (1) {
-          if (SDL_PollEvent(&e) && e.type == SDL_QUIT) {
-              break;
-          }
-      }
+        return 0;
+    }
+    ```
+    要編譯的時候，要告訴 gcc 把 SDL.dll 與 main.c 連接，所以要用 `gcc main.c SDL2.dll -o main.exe`，當作同時編譯這兩個東西 (單獨編譯時 linker 找不到 SDL.dll，需要輸入更多指令，好複雜，求簡單放棄編譯效率，直接再編一次)，就會 link 在一起，成功顯示視窗！
+  5. 如果跟我一樣用 VScode 而且懶了打指令，可以去 `.vscode` 的 `task.json` 中，在 `args` 區中的 `"${file}",` 下一行多加一個 `"SDL2.dll",` 的項，就會按執行紐就直接編譯 + 執行！  
+  6. 接下來是 **SDL2_image**，步驟就和前面幾乎一模一樣，先去 [官網](https://github.com/libsdl-org/SDL_image/releases) 載好 `SDL2_image-devel-2.6.3-mingw.zip`
+  7. 找到 `x86_64-w64-mingw32` > `include` > `SDL2` 裡有唯一一個 header，把他也丟到 2. 創的 SDL2 資料夾中
+  8. 在 `x86_64-w64-mingw32` > `bin`，把裡面的 `SDL2_image.dll` 丟到 main.c 同一個資料夾中
+  9. 下載完成！試試看更複雜的：
+      ```c
+        #include <stdio.h>
+        #include ".\SDL2\SDL.h"
+        #include ".\SDL2\SDL_image.h"
+        #undef main
 
-      // Cleanup
-      SDL_FreeSurface(image);
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      return 0;
-  }
-  ```
+        int main(int argc, char** argv) {
+            // Initialize SDL
+            if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+                fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
+                return 1;
+            }
+
+            // Initialize SDL_image
+            if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+                fprintf(stderr, "Failed to initialize SDL_image: %s\n", IMG_GetError());
+                SDL_Quit();
+                return 1;
+            }
+
+            // Create window
+            SDL_Window* window = SDL_CreateWindow("SDL Image Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+            if (!window) {
+                fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+                IMG_Quit();
+                SDL_Quit();
+                return 1;
+            }
+
+            // Create renderer
+            SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+            if (!renderer) {
+                fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+                SDL_DestroyWindow(window);
+                IMG_Quit();
+                SDL_Quit();
+                return 1;
+            }
+
+            // Load image as texture
+            SDL_Texture* imageTexture = IMG_LoadTexture(renderer, "image.png");
+            if (!imageTexture) {
+                fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
+                SDL_DestroyRenderer(renderer);
+                SDL_DestroyWindow(window);
+                IMG_Quit();
+                SDL_Quit();
+                return 1;
+            }
+
+            // Clear renderer
+            SDL_RenderClear(renderer);
+
+           // Set the destination rectangle
+          SDL_Rect destRect;
+          destRect.x = 100;  // x-coordinate of the destination rectangle
+          destRect.y = 100;  // y-coordinate of the destination rectangle
+          destRect.w = 200;  // width of the destination rectangle
+          destRect.h = 200;  // height of the destination rectangle
+
+          // Copy texture to renderer
+          SDL_RenderCopy(renderer, imageTexture, NULL, &destRect);
+
+            // Update renderer
+            SDL_RenderPresent(renderer);
+
+            // Wait for user to quit
+            SDL_Event event;
+            while (SDL_WaitEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    break;
+                }
+            }
+
+            // Destroy texture, renderer, and window
+            SDL_DestroyTexture(imageTexture);
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyWindow(window);
+
+            // Quit SDL_image and SDL
+            IMG_Quit();
+            SDL_Quit();
+
+            return 0;
+        }
+      ```
+      這個就可以在指定位置中顯示圖片 (要與 main.exe 同一個資料夾)，同樣，編譯的指令就變成 `gcc main.c SDL2.dll SDL2_image.dll -o main.exe`  
+  10. **全部載完了**！如果一樣很懶，就在剛剛 `task.json` 加 `"SDL2.dll",` 的地方再加一行 `"SDL2_image.dll",` 就好！
 
 
 # For Users 
