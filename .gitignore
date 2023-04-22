@@ -2,4 +2,4 @@
 /.vscode
 
 # 忽略 exe 檔
-/ *.exe
+/*.exe
