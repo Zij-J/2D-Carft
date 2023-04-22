@@ -7,6 +7,7 @@
   - https://www.w3schools.com/git/git_remote_branch.asp?remote=github
   - https://docs.github.com/en/enterprise-server@3.7/get-started/using-git/pushing-commits-to-a-remote-repository
   - https://www.maxlist.xyz/2020/05/03/git-reset-checkout/
+  - https://www.freecodecamp.org/news/gitignore-file-how-to-ignore-files-and-folders-in-git/
 ### **簡介**
 > 我只是大略懂，還是**上網查** or **ChatGPT** 比較清楚！
 - Git 是**版本管理工具**，當你加了新功能，不小心把程式搞砸時，就可以用 Git 「**回朔**」，不用備分一堆「第 X 版」的程式，還可以「**合併**」兩個不同版本程式，除了讓開發時可以 分成除錯部分與新功能部份 等可能性，還可以用於多人合作！
@@ -99,7 +100,7 @@ git remote rename origin <新名字>
     ```
     gitk --all
     ```
-    這可以直接開啟叫做 gitk 的程式，上面就有漂亮的圖示了 (`--all` 也是要求全部顯示的意思)！
+    這可以直接開啟叫做 gitk 的程式，上面就有漂亮的圖示了 (`--all` 也是要求全部顯示的意思)，在 commit 量很多時都用這個！
 
 - 檢視所有 **branches** + 現在工作的 **branch** 
     ```
@@ -138,6 +139,15 @@ git remote rename origin <新名字>
   ```
   - 與 push 不同，他會直接把下載的東西 Merge 到**目前個工作分支**
   - 可用 `git pull <取的 Remote Repo 名> <Remote branch名>:<Local branch名>`來指定要 pull 給的目標 local 分支
+### **Git 忽略檔案**
+- 像是 `.vscode` 這種依編譯器不同而異的、`.exe` 這種只要一編譯就會有的、我們裝的 `SDL2.dll` 這種 Windows獨有的 (但我們專案小平台跨少，而且 .dll 綁 SDL2版本，所以留 .dll 好了)，其實都不值得紀錄，應該被忽略 ([gitignore 模板](https://github.com/github/gitignore))
+- 用 `.gitignore` 檔來忽略他們，使他們不會被記錄！
+-  `.gitignore` 是文字檔，副檔名為 `.gitignore` ，只要輸入路徑位置，就可忽略路徑下的所有檔案
+   -  ex: `/text.txt`：忽略專案自料夾中的 `text.txt`
+   -  ex: `/text/text.txt`：忽略專案自料夾中 `text` 資料夾內的 `text.txt`
+   -  ex: `/*.md`：忽略專案自料夾中所有 `.md` 檔 (不含資料夾內的 `.md`)
+   -  ex: `!/test/example.md`：不要忽略專案自料夾中 `text` 資料夾內的 `example.md`
+
 ### **Github 多人合作**
 - **共用 Remote Repo** (才能直接 push)：根據 [官方教學](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository) ，去 **Settings** > **Access** > **Collaborators**，就可看到 **Add People**，用名字搜尋，即可加入他人一起共用 Repo
 - ***更新功能流程***：
@@ -149,7 +159,6 @@ git remote rename origin <新名字>
   6. 測試通過，在 Github 的 **Pull Request** 按 **Merge Pull Request** > **Confirm Pull Request**，成功把 Remote 的 子捷branch 與 Remote master 合併
   7. 所有人，把新的 Remote master pull到自己的 local master：`git pull <Remote> master:master`
   8. 非此功能修改者，把新的 local master merge 到自己正在寫 branch 中，並手動處理、更改其中可能的衝突：`git merge master`，就完成大家同步了！
-
 
 ***
 
@@ -219,7 +228,7 @@ git remote rename origin <新名字>
 4. 下載完了！試試以下範例：
     ```c
     #include <stdio.h>
-    #include "SDL2\SDL.h"
+    #include "SDL2/SDL.h"
     #undef main //必須加！SDL很奇怪地把 main 用 Macro 定義了，導致 int main 會被修掉，所以要 undef 掉
 
     int main(int argc, char** argv) {
@@ -262,8 +271,8 @@ git remote rename origin <新名字>
   9. 下載完成！試試看更複雜的：
       ```c
         #include <stdio.h>
-        #include ".\SDL2\SDL.h"
-        #include ".\SDL2\SDL_image.h"
+        #include "./SDL2/SDL.h"
+        #include "./SDL2/SDL_image.h"
         #undef main
 
         int main(int argc, char** argv) {
@@ -348,7 +357,27 @@ git remote rename origin <新名字>
       ```
       這個就可以在指定位置中顯示圖片 (要與 main.exe 同一個資料夾)，同樣，編譯的指令就變成 `gcc main.c SDL2.dll SDL2_image.dll -o main.exe`  
   10. **全部載完了**！如果一樣很懶，就在剛剛 `task.json` 加 `"SDL2.dll",` 的地方再加一行 `"SDL2_image.dll",` 就好！
+  11. 但因為我們會分成多個檔案開發，所以需要 `Makefile`，在下面的 **專案架構說明** 有寫到如何使用
 
+## **專案架構說明**
+- `block_picture` 資料夾：放入要顯示方塊的圖片 (png)
+- `include` 資料夾：放所有 **header** 的資料夾，所以如果要使用在其中的 header，請用 `#include "./include/<header 名字>.h"`，像是我把常用的 Macro 與 函式庫丟入 `basicSetting.h` 中後，之後只要 `#include "./include/basicSetting.h"` 就可以用裡面的東西
+- `SDL2` 資料夾：放所有 **SDL2 相關的 header**，像是在 `basicSetting.h` 中用的 `#include "../SDL2/SDL.h"` 就用到了這裡的 header
+- `source` 資料夾：放所有 **除了 main.c 以外的 .c 檔**，寫完之後如何編譯請看 `Makefile` 的說明 
+- `.gitignore`：詳情使用方式已在 **如何使用 Git & Github** 更新，我只忽略了 `.vscode` 與 `*.exe` (也就是唯一的 `main.exe`)
+- `main.c`、`main.exe`：主程式與最後的可執行程式
+- `Makefile`：
+  - 老師教的那個！
+  - 如何在 Windows 執行 Makefile：
+    參考 [這篇](https://medium.com/@s815651/%E5%9C%A8windows%E4%B8%8B%E4%BD%BF%E7%94%A8makefile-5dc8b4e6ec90) 教學，把 mingGW 中 `mingw32-make` 的名字命名成 `make` (預設下載在 `C:\Program Files\mingw64\bin` 中)，就可以用 make 指令！
+  - 再魔改助教的 Makefile (可以打開看看內容)，主要是改了 **.c的位置** (在 `soruce\*.c` ) 與**刪除 .o 的方式** (`del`)，讓他一個指令就 檢查所有變動的 .c 檔，編譯變動的 .c 成 .o，把 .o 與 .dll 全部 link 起來，最後刪除 .o！
+  - 所以，只要在 cmd 輸入 `make`，就會**編譯所有已變動的 .c 檔**！然後在輸入 `./main.exe` 就可以**執行我們的程式**！
+- `README.md`：你現在正在看的東西
+- `SDL2_image.dll`、`SDL2.dll`：是**已編譯好的 SDL 函式庫**，我們的 `.exe` 要執行必須要用他們，所以需與 `.exe` 放於同一層資料夾中
+
+
+## Minecraft 2D 素材 (160 x 160)
+- https://minecraft.fandom.com/wiki/List_of_block_textures
 
 # For Users 
 - 
