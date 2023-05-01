@@ -2,7 +2,8 @@
 
 // 預設函式庫
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> // for malloc
+#include <string.h> // for strdup，自己寫不知道放哪裡，感覺會使程式更混亂
 #include "../SDL2/SDL.h" //..會回到上層資料夾，就可以再找SDL2
 #include "../SDL2/SDL_image.h"
 
@@ -13,5 +14,5 @@ enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
 
 // 方塊邊長
-#define TOTAL_BLOCK_NUMBER_IN_WIDTH 12
-#define BLOCK_WIDTH (WINDOW_HEIGHT / TOTAL_BLOCK_NUMBER_IN_WIDTH) // 用寬能放幾個推算方塊的邊長
+#define TOTAL_BLOCK_NUMBER_IN_WIDTH 16
+#define BLOCK_WIDTH (WINDOW_WIDTH / TOTAL_BLOCK_NUMBER_IN_WIDTH) // 用寬能放幾個推算方塊的邊長 (from windows大小)

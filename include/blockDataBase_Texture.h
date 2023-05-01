@@ -22,3 +22,4 @@ typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
 // prototype
 
 void storedBlock_InitArray(storedBlock_ArrayAndSize *storedBlock_ArrayRecord);
+void storedBlock_AddTexture(storedBlock_ArrayAndSize *storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer);

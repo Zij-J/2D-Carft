@@ -3,7 +3,7 @@
 #include "../include/basicSetting.h" //要用的
 #include "../include/SDL_StartAndEnd.h" //要放的
 
-// 初始化 SDL、SDL_Image、創立windows、renderer
+// 初始化 SDL、SDL_Image、創立windows、renderer (因為要改在main的windows、renderer值，所以須double pointer)
 void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
 {
     // Initialize SDL
@@ -44,11 +44,11 @@ void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
 }
 
 // 關閉 renderer、windows、SDL_Image、SDL後，結束程式
-void SDL_EndAll_StopProgram(SDL_Window **window, SDL_Renderer **renderer)
+void SDL_EndAll_StopProgram(SDL_Window *window, SDL_Renderer *renderer)
 {
     // Destroy renderer, and window
-    SDL_DestroyRenderer(*renderer);
-    SDL_DestroyWindow(*window);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
 
     // Quit SDL_image and SDL
     IMG_Quit();
