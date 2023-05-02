@@ -1,9 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "./SDL2/SDL.h"
 #include "./SDL2/SDL_image.h"
-#include <conio.h>
-#include <time.h>
 #undef main
+#define SCR_N 8
 
 void set_image(SDL_Rect *r,int x1,int y1,int w1,int h1){
     r->x=x1;    // x-coordinate of the destination rectangle
@@ -13,11 +14,35 @@ void set_image(SDL_Rect *r,int x1,int y1,int w1,int h1){
 }
 
 void delay(float secs) {
-    clock_t start_time = clock();  
-    while (clock() <start_time+secs*1000);               
+    clock_t start_time = clock();
+    while (clock() <start_time+secs*1000);
+}
+
+void update_screen(SDL_Renderer* renderer, SDL_Rect destRect, int n_img, SDL_Texture *imageTexture[], SDL_Texture *frameTexture, int frame[], int map[SCR_N][SCR_N]){
+    // Clear renderer
+    SDL_RenderClear(renderer);
+    for(int i=0; i<SCR_N; i++){
+        for(int j=0; j<SCR_N; j++){
+            // Set the destination rectangle
+            set_image(&destRect,80*j,80*i,80,80);
+            // Copy texture to renderer
+            SDL_RenderCopy(renderer, imageTexture[map[i][j]], NULL, &destRect);
+        }
+    }
+    set_image(&destRect,80*frame[0],80*frame[1],80,80);
+    SDL_RenderCopy(renderer, frameTexture, NULL, &destRect);
+    // Update renderer
+    SDL_RenderPresent(renderer);
 }
 
 int main(int argc, char** argv) {
+    //setting
+    srand( time(NULL) );
+    int map[SCR_N][SCR_N],frame[2]={SCR_N/2,SCR_N/2};//screen  //frame x, y
+    for(int i=0; i<SCR_N; i++){
+        for(int j=0; j<SCR_N; j++) map[i][j]=rand()%8;
+    }
+
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
@@ -49,9 +74,12 @@ int main(int argc, char** argv) {
     }
 
     // Load image as texture
-    char *img[]={"./image_sourse/tex1.png", "./image_sourse/tex2.png", "./image_sourse/tex3.png"};//image sourse
+    char *img[]={"./image_sourse/tex1.png", "./image_sourse/tex2.png", "./image_sourse/tex3.png",
+                 "./image_sourse/tex4.png", "./image_sourse/tex5.png", "./image_sourse/tex6.png",
+                 "./image_sourse/tex7.png", "./image_sourse/tex8.png"};//image sourse
     int n_img=sizeof(img)/sizeof(char*);//number of img
-    SDL_Texture* imageTexture[n_img];
+    SDL_Texture *imageTexture[n_img], *frameTexture;
+    frameTexture = IMG_LoadTexture(renderer, "./image_sourse/frame.png");//frame
     for(int i=0; i<n_img; i++){
         imageTexture[i] = IMG_LoadTexture(renderer, img[i]);
         if (!imageTexture[i]) {
@@ -64,26 +92,32 @@ int main(int argc, char** argv) {
         }
     }
 
+    //initialize
+
     //SDL_RenderClear(renderer);
     SDL_Rect destRect;
-    for(int i=0; i<n_img; i++){
-        char a=getch();//when press key in terminal, then keep going
-        printf("a='%c'\n",a);
-        // Clear renderer
-        SDL_RenderClear(renderer);
-        // Set the destination rectangle
-        set_image(&destRect,80*(i),0,80,80);
-        // Copy texture to renderer
-        SDL_RenderCopy(renderer, imageTexture[i], NULL, &destRect);
-        // Update renderer
-        SDL_RenderPresent(renderer);
-    }
+    update_screen(renderer, destRect, n_img, imageTexture, frameTexture, frame, map);//update screen
 
-    // Wait for user to quit
+    //key in or moving mouse
+
     SDL_Event event;
-    while (SDL_WaitEvent(&event)) {
-        if (event.type == SDL_QUIT) {
+    while(SDL_WaitEvent(&event)){
+        if (event.type == SDL_QUIT) {//quit
             break;
+        }
+        else if(event.type == SDL_MOUSEMOTION){//move mouse
+            int x_mouse, y_mouse;
+            SDL_GetMouseState(&x_mouse,&y_mouse);
+            frame[0]=x_mouse/80, frame[1]=y_mouse/80;
+            update_screen(renderer, destRect, n_img, imageTexture, frameTexture, frame, map);//update screen
+        }
+        else if(event.type == SDL_KEYDOWN){//press key
+            if(event.key.keysym.sym == SDLK_w && frame[1]>0) frame[1]--;
+            else if(event.key.keysym.sym == SDLK_a && frame[0]>0) frame[0]--;
+            else if(event.key.keysym.sym == SDLK_s && frame[1]<SCR_N-1) frame[1]++;
+            else if(event.key.keysym.sym == SDLK_d && frame[0]<SCR_N-1) frame[0]++;
+            //printf("*code: %d*\n",event.key.keysym.sym);  //check press key's code
+            update_screen(renderer, destRect, n_img, imageTexture, frameTexture, frame, map);//update screen
         }
     }
     // Destroy texture, renderer, and window
