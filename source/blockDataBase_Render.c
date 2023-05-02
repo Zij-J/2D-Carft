@@ -21,6 +21,7 @@ struct renderedBlockArrayStruct
 typedef struct renderedBlockArrayStruct renderedBlock_ArrayAndSize;
 
 
+
 // 自用的 renderedBlcokData array, camera位置(比預設移動了多少)
 static renderedBlock_ArrayAndSize renderedBlock_ArrayRecord;
 static renderedBlock_cameraPosition cameraPosition;
@@ -53,21 +54,12 @@ static void renderedBlock_AddBlock(SDL_Texture *blockTexture, int x, int y)
 }
 
 // 從 placedblock 掃現在 windows 應有的方塊，更改要顯示的方塊資料庫
-void renderedBlock_ScanWindow(storedBlock_ArrayAndSize *storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
+void renderedBlock_ScanWindow(storedBlock_DataBase storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
 {
     for(int i = 0; i < (*placedBlock_ArrayRecord).storedSize; ++i)
     {
         // get Texture
-        SDL_Texture *neededBlockTexture;
-        for(int i = 0; i < (*storedBlock_ArrayRecord).storedSize; ++i)
-        {
-            // 名字一樣，那此方塊的 Texture 就是這個！
-            if(strcmp((*storedBlock_ArrayRecord).array[i].blockName, (*placedBlock_ArrayRecord).array[i].blockName) == 0)
-            {
-                neededBlockTexture = (*storedBlock_ArrayRecord).array[i].blockTexture;
-                break;
-            }       
-        }
+        SDL_Texture *neededBlockTexture = storedBlock_GetTexture(storedBlock_ArrayRecord, (*placedBlock_ArrayRecord).array[i].blockName);
 
         // 放到顯示的renderer內
         renderedBlock_AddBlock(neededBlockTexture, (*placedBlock_ArrayRecord).array[i].x, (*placedBlock_ArrayRecord).array[i].y);

@@ -3,15 +3,16 @@
 #include "../include/blockDataBase_Position.h" //要放的
 
 
+
 // 初始化資料庫
-void placedBlock_InitArray(placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
+public void placedBlock_InitArray(placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
 {
     *placedBlock_ArrayRecord = (placedBlock_ArrayAndSize) {.array = (placedBlock_Data *)malloc(sizeof(placedBlock_Data) * INIT_ARRAY_SIZE), \
                                                             .storedSize = 0 , .maxSize = INIT_ARRAY_SIZE}; 
 }
 
 // 加入(放上)方塊
-void placedBlock_AddBlock(placedBlock_ArrayAndSize *placedBlock_ArrayRecord, char *blockName, int x, int y)
+public void placedBlock_AddBlock(placedBlock_ArrayAndSize *placedBlock_ArrayRecord, char *blockName, int x, int y)
 {
     // 滿了！先擴充資料庫！
     if((*placedBlock_ArrayRecord).storedSize == (*placedBlock_ArrayRecord).maxSize)
