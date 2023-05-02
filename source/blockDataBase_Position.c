@@ -27,10 +27,3 @@ void placedBlock_AddBlock(placedBlock_ArrayAndSize *placedBlock_ArrayRecord, cha
     // 加入資料進 DataBase
     (*placedBlock_ArrayRecord).array[nowIndex] = (placedBlock_Data) {.blockName = strdup(blockName), .x = x, .y = y};
 }
-
-
-// 把所有方塊畫上去
-void placedBlock_RenderAllBlocks(SDL_Renderer *renderer, placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
-{
-    
-}

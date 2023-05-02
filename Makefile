@@ -2,7 +2,7 @@
 # 如果新增了新的.c檔，請放在source內，再把codes加上 source\<檔案名>.o 就可以了
 
 #windows在cmd中的路徑必須用\，但C的#include就不用，超怪
-codes := main.o source\SDL_StartAndEnd.o source\blockDataBase_Position.o source\blockDataBase_Texture.o
+codes := main.o source\SDL_StartAndEnd.o source\blockDataBase_Position.o source\blockDataBase_Texture.o source\blockDataBase_Render.o
 dlls := SDL2.dll SDL2_image.dll
 exe := main.exe
 

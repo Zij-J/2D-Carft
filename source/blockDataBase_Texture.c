@@ -4,15 +4,18 @@
 #include "../include/blockDataBase_Texture.h" //要放的
 
 
+
+
+
 // 初始化資料庫
-void storedBlock_InitArray(storedBlock_ArrayAndSize *storedBlock_ArrayRecord)
+public void storedBlock_InitArray(storedBlock_ArrayAndSize *storedBlock_ArrayRecord)
 {
     *storedBlock_ArrayRecord = (storedBlock_ArrayAndSize) {.array = (storedBlock_Data *)malloc(sizeof(storedBlock_Data) * INIT_ARRAY_SIZE), \
                                                             .storedSize = 0 ,.maxSize = INIT_ARRAY_SIZE}; 
 }
 
 // 加入(匯入)方塊材質
-void storedBlock_AddTexture(storedBlock_ArrayAndSize *storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer)
+public void storedBlock_AddTexture(storedBlock_ArrayAndSize *storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer)
 {
     // 滿了！先擴充資料庫！
     if((*storedBlock_ArrayRecord).storedSize == (*storedBlock_ArrayRecord).maxSize)
@@ -40,4 +43,15 @@ void storedBlock_AddTexture(storedBlock_ArrayAndSize *storedBlock_ArrayRecord, c
 
     // 把Texture、名字直接 Load 到 array 內！
     (*storedBlock_ArrayRecord).array[nowIndex] = (storedBlock_Data) {.blockName = strdup(blockName), .blockTexture = getBlockTexture};  
+}
+
+// 清除資料庫，刪除已 load 的材質
+public void storedBlock_ClearDataBase(storedBlock_ArrayAndSize *storedBlock_ArrayRecord)
+{
+    // 清除材質
+    for(int i = 0; i < (*storedBlock_ArrayRecord).storedSize; ++i)
+    {
+        SDL_Texture *nowBlockTexture = (*storedBlock_ArrayRecord).array[i].blockTexture;
+        SDL_DestroyTexture(nowBlockTexture);
+    }
 }

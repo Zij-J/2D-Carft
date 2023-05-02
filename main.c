@@ -3,10 +3,11 @@
 #include "./include/SDL_StartAndEnd.h"
 #include "./include/blockDataBase_Position.h"
 #include "./include/blockDataBase_Texture.h"
+#include "./include/blockDataBase_Render.h"
 #undef main
 
 // 顯示所有的圖片 (*placedBlock_ArrayRecord 用 pointer 傳，才不用複製貼上一堆)
-static void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window, storedBlock_ArrayAndSize *storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord);
+private void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window);
 
 
 // main函式
@@ -18,18 +19,21 @@ int main(int argc, char** argv)
     SDL_InitializeAll(&window, &renderer);
 
     // all 資料庫初始化
-    storedBlock_ArrayAndSize storedBlock_ArrayRecord;
+    storedBlock_ArrayAndSize storedBlock_ArrayRecord; //因為其他功能需要使用此array，所以寫在外面而非source code內
     placedBlock_ArrayAndSize placedBlock_ArrayRecord;
     storedBlock_InitArray(&storedBlock_ArrayRecord);
     placedBlock_InitArray(&placedBlock_ArrayRecord);
+    renderedBlock_InitArray();
 
 
-    // 給入資料庫 (載入Grass_Block為Texture + 放上兩個 grass_block)
+    // 給入資料庫 (載入Grass_Block為Texture + 放上 grass_block)
     // 材質部分
     storedBlock_AddTexture(&storedBlock_ArrayRecord, "Grass_Block", window, renderer);
     // 放置部分 (這是平面)
     for(int i = 0; i < TOTAL_BLOCK_NUMBER_IN_WIDTH ; ++i)
         placedBlock_AddBlock(&placedBlock_ArrayRecord, "Grass_Block", 0 + BLOCK_WIDTH * i, WINDOW_HEIGHT - 2 * BLOCK_WIDTH);
+    // 掃入 renderDataBase
+    renderedBlock_ScanWindow(&storedBlock_ArrayRecord, &placedBlock_ArrayRecord);
 
     
     // 輸入！
@@ -51,16 +55,11 @@ int main(int argc, char** argv)
         
 
         // 顯示所有圖片
-        SDL_RenderAllPicture(renderer, window, &storedBlock_ArrayRecord, &placedBlock_ArrayRecord);
+        SDL_RenderAllPicture(renderer, window);
     }
 
-    
-    // 清除材質
-    for(int i = 0; i < storedBlock_ArrayRecord.storedSize; ++i)
-    {
-        SDL_Texture *nowBlockTexture = storedBlock_ArrayRecord.array[i].blockTexture;
-        SDL_DestroyTexture(nowBlockTexture);
-    }
+    // 關閉資料庫
+    storedBlock_ClearDataBase(&storedBlock_ArrayRecord); //刪除材質在這裡
 
 
     // Close Program
@@ -71,37 +70,13 @@ int main(int argc, char** argv)
 
 
 // 感覺大家會用到很多這個(顯示圖片)，所以放在 main.c 中  //或許需要 Texture 資料庫，不然要一直 delete & load
-static void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window, storedBlock_ArrayAndSize *storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
+static void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window)
 {
     // Clear renderer
     SDL_RenderClear(renderer);
-
     
-    // 顯示所有 placedBlock
-    for(int i = 0; i < (*placedBlock_ArrayRecord).storedSize; ++i)
-    {
-        // Set the destination rectangle
-        SDL_Rect destRect;
-        destRect.x = (*placedBlock_ArrayRecord).array[i].x;  // x-coordinate of the destination rectangle
-        destRect.y = (*placedBlock_ArrayRecord).array[i].y;  // y-coordinate of the destination rectangle
-        destRect.w = BLOCK_WIDTH;  // width of the destination rectangle
-        destRect.h = BLOCK_WIDTH;  // height of the destination rectangle        
-
-        // get Texture
-        SDL_Texture *neededBlockTexture;
-        for(int i = 0; i < (*storedBlock_ArrayRecord).storedSize; ++i)
-        {
-            // 名字一樣，那此方塊的 Texture 就是這個！
-            if(strcmp((*storedBlock_ArrayRecord).array[i].blockName, (*placedBlock_ArrayRecord).array[i].blockName) == 0)
-            {
-                neededBlockTexture = (*storedBlock_ArrayRecord).array[i].blockTexture;
-                break;
-            }       
-        }
-        
-        // Copy texture to renderer
-        SDL_RenderCopy(renderer, neededBlockTexture, NULL, &destRect);
-    }
+    // 顯示所有 renderedBlock
+    renderedBlock_RenderToRenderer(renderer);
    
     // Update renderer
     SDL_RenderPresent(renderer);
