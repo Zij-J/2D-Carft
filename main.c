@@ -35,7 +35,6 @@ int main(int argc, char** argv)
     // 掃入 renderDataBase
     renderedBlock_ScanWindow(storedBlock_ArrayRecord, &placedBlock_ArrayRecord);
 
-    
     // 輸入！
     SDL_Event event;
     while (SDL_WaitEvent(&event)) //我們是有輸入才有動作，所以用 SDL_WaitEvent 即可
@@ -53,7 +52,7 @@ int main(int argc, char** argv)
                 printf("backward");
         }
         
-
+        
         // 顯示所有圖片
         SDL_RenderAllPicture(renderer, window);
     }
