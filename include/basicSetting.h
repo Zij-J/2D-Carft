@@ -14,7 +14,7 @@ enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
 
 // 方塊邊長
-#define TOTAL_BLOCK_NUMBER_IN_WIDTH 10
+#define TOTAL_BLOCK_NUMBER_IN_WIDTH 16
 #define BLOCK_WIDTH (WINDOW_WIDTH / TOTAL_BLOCK_NUMBER_IN_WIDTH) // 用寬能放幾個推算方塊的邊長 (from windows大小)
 
 // 初始 Array大小 for 可變動array (三個檔案共用)
