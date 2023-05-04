@@ -6,7 +6,7 @@
 // prototype
 
 void renderedBlock_InitArray();
-void renderedBlock_ScanWindow(storedBlock_DataBase storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord);
+void renderedBlock_ScanWindow(storedBlock_DataBase storedBlock_ArrayRecord, placedBlock_DataBase placedBlock_ArrayRecord);
 void renderedBlock_RenderToRenderer(SDL_Renderer *renderer);
 
 

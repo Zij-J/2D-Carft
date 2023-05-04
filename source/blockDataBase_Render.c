@@ -36,7 +36,7 @@ void renderedBlock_InitArray()
 }
 
 // 加入(要畫的)方塊
-static void renderedBlock_AddBlock(SDL_Texture *blockTexture, int x, int y)
+private void renderedBlock_AddBlock(SDL_Texture *blockTexture, int x, int y)
 {
     // 滿了！先擴充資料庫！
     if(renderedBlock_ArrayRecord.storedSize == renderedBlock_ArrayRecord.maxSize)
@@ -53,18 +53,18 @@ static void renderedBlock_AddBlock(SDL_Texture *blockTexture, int x, int y)
     renderedBlock_ArrayRecord.array[nowIndex] = (renderedBlock_Data) {.blockTexture = blockTexture, .x = x, .y = y};
 }
 
-// 從 placedblock 掃現在 windows 應有的方塊，更改要顯示的方塊資料庫
-void renderedBlock_ScanWindow(storedBlock_DataBase storedBlock_ArrayRecord, placedBlock_ArrayAndSize *placedBlock_ArrayRecord)
-{
-    for(int i = 0; i < (*placedBlock_ArrayRecord).storedSize; ++i)
-    {
-        // get Texture
-        SDL_Texture *neededBlockTexture = storedBlock_GetTexture(storedBlock_ArrayRecord, (*placedBlock_ArrayRecord).array[i].blockName);
+// // 從 placedblock 掃現在 windows 應有的方塊，更改要顯示的方塊資料庫
+// void renderedBlock_ScanWindow(storedBlock_DataBase storedBlock_ArrayRecord, placedBlock_DataBase placedBlock_ArrayRecord)
+// {
+//     for(int i = 0; i < (*placedBlock_ArrayRecord).storedSize; ++i)
+//     {
+//         // get Texture
+//         SDL_Texture *neededBlockTexture = storedBlock_GetTexture(storedBlock_ArrayRecord, (*placedBlock_ArrayRecord).array[i].blockName);
 
-        // 放到顯示的renderer內
-        renderedBlock_AddBlock(neededBlockTexture, (*placedBlock_ArrayRecord).array[i].x, (*placedBlock_ArrayRecord).array[i].y);
-    }
-}
+//         // 放到顯示的renderer內
+//         renderedBlock_AddBlock(neededBlockTexture, (*placedBlock_ArrayRecord).array[i].x, (*placedBlock_ArrayRecord).array[i].y);
+//     }
+// }
 
 
 // 畫上所有要顯示的方塊

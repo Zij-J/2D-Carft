@@ -23,6 +23,7 @@ typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
 // 初始化資料庫
 public void storedBlock_InitArray(storedBlock_DataBase storedBlock_ArrayRecord)
 {
+    storedBlock_ArrayRecord = (storedBlock_ArrayAndSize *)malloc(sizeof(storedBlock_ArrayAndSize)); //不知為何可以不先分配位置就給值了。總之還是補上
     *storedBlock_ArrayRecord = (storedBlock_ArrayAndSize) {.array = (storedBlock_Data *)malloc(sizeof(storedBlock_Data) * INIT_ARRAY_SIZE), \
                                                             .storedSize = 0 ,.maxSize = INIT_ARRAY_SIZE}; 
 }
@@ -30,13 +31,14 @@ public void storedBlock_InitArray(storedBlock_DataBase storedBlock_ArrayRecord)
 // 加入(匯入)方塊材質
 public void storedBlock_AddTexture(storedBlock_DataBase storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer)
 {
+    printf("%d", (*storedBlock_ArrayRecord).maxSize);
     // 滿了！先擴充資料庫！
     if((*storedBlock_ArrayRecord).storedSize == (*storedBlock_ArrayRecord).maxSize)
     {
         (*storedBlock_ArrayRecord).maxSize *= 2; //助教說要擴兩倍比+1快！
         (*storedBlock_ArrayRecord).array = (storedBlock_Data *) realloc((*storedBlock_ArrayRecord).array, sizeof(storedBlock_Data) * (*storedBlock_ArrayRecord).maxSize); //記得realloc需要有變數接住！
     }
-
+    
     // ++總數後算 index 
     ++(*storedBlock_ArrayRecord).storedSize; //先+1，之後再-1說是0-base，才是第n項存在第n-1項
     int nowIndex = (*storedBlock_ArrayRecord).storedSize - 1;
@@ -80,4 +82,5 @@ public void storedBlock_ClearDataBase(storedBlock_DataBase storedBlock_ArrayReco
         SDL_Texture *nowBlockTexture = (*storedBlock_ArrayRecord).array[i].blockTexture;
         SDL_DestroyTexture(nowBlockTexture);
     }
+    free(storedBlock_ArrayRecord); //把 struct free 掉
 }

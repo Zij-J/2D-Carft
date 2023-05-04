@@ -20,20 +20,22 @@ int main(int argc, char** argv)
 
     // all 資料庫初始化
     storedBlock_DataBase storedBlock_ArrayRecord; //因為其他功能需要使用此array，所以寫在外面而非source code內
-    placedBlock_ArrayAndSize placedBlock_ArrayRecord;
+    placedBlock_DataBase placedBlock_ArrayRecord;
     storedBlock_InitArray(storedBlock_ArrayRecord);
-    placedBlock_InitArray(&placedBlock_ArrayRecord);
+    placedBlock_InitArray(placedBlock_ArrayRecord);
     renderedBlock_InitArray();
 
-
+    
     // 給入資料庫 (載入Grass_Block為Texture + 放上 grass_block)
     // 材質部分
+    
     storedBlock_AddTexture(storedBlock_ArrayRecord, "Grass_Block", window, renderer);
+    printf("ss");
     // 放置部分 (這是平面)
     for(int i = 0; i < TOTAL_BLOCK_NUMBER_IN_WIDTH ; ++i)
-        placedBlock_AddBlock(&placedBlock_ArrayRecord, "Grass_Block", 0 + BLOCK_WIDTH * i, WINDOW_HEIGHT - 2 * BLOCK_WIDTH);
+        placedBlock_AddBlock(placedBlock_ArrayRecord, "Grass_Block", 0 + BLOCK_WIDTH * i, WINDOW_HEIGHT - 2 * BLOCK_WIDTH);
     // 掃入 renderDataBase
-    renderedBlock_ScanWindow(storedBlock_ArrayRecord, &placedBlock_ArrayRecord);
+    //renderedBlock_ScanWindow(storedBlock_ArrayRecord, &placedBlock_ArrayRecord);
 
     // 輸入！
     SDL_Event event;
@@ -59,7 +61,7 @@ int main(int argc, char** argv)
 
     // 關閉資料庫
     storedBlock_ClearDataBase(storedBlock_ArrayRecord); //刪除材質在這裡
-
+    placedBlock_ClearDataBase(placedBlock_ArrayRecord);
 
     // Close Program
     SDL_EndAll_StopProgram(window, renderer);
@@ -75,7 +77,7 @@ static void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window)
     SDL_RenderClear(renderer);
     
     // 顯示所有 renderedBlock
-    renderedBlock_RenderToRenderer(renderer);
+    //renderedBlock_RenderToRenderer(renderer);
    
     // Update renderer
     SDL_RenderPresent(renderer);
