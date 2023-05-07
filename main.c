@@ -9,10 +9,10 @@
 // 顯示所有的圖片 (*placedBlock_ArrayRecord 用 pointer 傳，才不用複製貼上一堆)
 private void SDL_RenderAllPicture(SDL_Renderer *renderer, SDL_Window *window);
 
-
 // main函式
 int main(int argc, char** argv) 
 {
+    
     // 創立所有 SDL 需要的東西
     SDL_Window* window; 
     SDL_Renderer* renderer;
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     // all 資料庫初始化
     storedBlock_DataBase storedBlock_ArrayRecord; //因為其他功能需要使用此array，所以寫在外面而非source code內
     placedBlock_DataBase placedBlock_ArrayRecord;
-    storedBlock_InitArray(storedBlock_ArrayRecord);
+    storedBlock_InitArray(&storedBlock_ArrayRecord);
     placedBlock_InitArray(placedBlock_ArrayRecord);
     renderedBlock_InitArray();
 
@@ -30,7 +30,6 @@ int main(int argc, char** argv)
     // 材質部分
     
     storedBlock_AddTexture(storedBlock_ArrayRecord, "Grass_Block", window, renderer);
-    printf("ss");
     // 放置部分 (這是平面)
     for(int i = 0; i < TOTAL_BLOCK_NUMBER_IN_WIDTH ; ++i)
         placedBlock_AddBlock(placedBlock_ArrayRecord, "Grass_Block", 0 + BLOCK_WIDTH * i, WINDOW_HEIGHT - 2 * BLOCK_WIDTH);

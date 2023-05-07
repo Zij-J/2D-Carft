@@ -25,3 +25,4 @@ enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
 #define public
 #define private static
+ 

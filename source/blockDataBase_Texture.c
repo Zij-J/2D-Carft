@@ -21,17 +21,18 @@ typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
 
 
 // 初始化資料庫
-public void storedBlock_InitArray(storedBlock_DataBase storedBlock_ArrayRecord)
+public void storedBlock_InitArray(storedBlock_DataBase *storedBlock_ArrayRecord)
 {
-    storedBlock_ArrayRecord = (storedBlock_ArrayAndSize *)malloc(sizeof(storedBlock_ArrayAndSize)); //不知為何可以不先分配位置就給值了。總之還是補上
+    //*storedBlock_ArrayRecord = (storedBlock_ArrayAndSize *)malloc(sizeof(storedBlock_ArrayAndSize)); //不知為何可以不先分配位置就給值了。總之還是補上
+    //storedBlock_ArrayRecord->storedSize = 10;
     *storedBlock_ArrayRecord = (storedBlock_ArrayAndSize) {.array = (storedBlock_Data *)malloc(sizeof(storedBlock_Data) * INIT_ARRAY_SIZE), \
-                                                            .storedSize = 0 ,.maxSize = INIT_ARRAY_SIZE}; 
+                                                            .storedSize = 10 ,.maxSize = INIT_ARRAY_SIZE}; 
 }
 
 // 加入(匯入)方塊材質
 public void storedBlock_AddTexture(storedBlock_DataBase storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer)
 {
-    printf("%d", (*storedBlock_ArrayRecord).maxSize);
+    printf("%d", (*storedBlock_ArrayRecord).storedSize);
     // 滿了！先擴充資料庫！
     if((*storedBlock_ArrayRecord).storedSize == (*storedBlock_ArrayRecord).maxSize)
     {

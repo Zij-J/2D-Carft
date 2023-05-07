@@ -7,7 +7,7 @@ typedef struct storedBlockArrayStruct *storedBlock_DataBase;
 
 // prototype
 
-void storedBlock_InitArray(storedBlock_DataBase storedBlock_ArrayRecord);
+void storedBlock_InitArray(storedBlock_DataBase *storedBlock_ArrayRecord);
 void storedBlock_AddTexture(storedBlock_DataBase storedBlock_ArrayRecord, char *blockName, SDL_Window *window, SDL_Renderer *renderer);
 SDL_Texture *storedBlock_GetTexture(storedBlock_DataBase storedBlock_ArrayRecord, char *textureName);
 void storedBlock_ClearDataBase(storedBlock_DataBase storedBlock_ArrayRecord);
