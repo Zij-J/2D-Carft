@@ -21,14 +21,14 @@ void insert(struct tNode *curNode, int newData) {
         if(newData < curNode->data){
             if(curNode->Lchild==NULL){
                 curNode->Lchild= create_tNode(newData, curNode, LEFT);
-                check(curNode->Lchild);
+                print_data(curNode),check(curNode->Lchild);
             }
             else insert(curNode->Lchild, newData);
         }
         else{
             if(curNode->Rchild==NULL){
                 curNode->Rchild= create_tNode(newData, curNode, RIGHT);
-                check(curNode->Rchild);
+                print_data(curNode),check(curNode->Rchild);
             }
             else insert(curNode->Rchild, newData);
         }
@@ -88,12 +88,19 @@ PRIVATE void check(struct tNode *curNode){
 }
 
 PRIVATE void left_rotate(struct tNode *curNode){
-    printf("\nL data: %d\n", curNode->data),P;
+    P;
+    //swap color
     COLOR c=curNode->color;
     curNode->color=curNode->Rchild->color;
     curNode->Rchild->color=c;
+    //update side
     curNode->Rchild->side=curNode->side;
     curNode->side=LEFT;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Rchild;
+        else curNode->parent->Rchild=curNode->Rchild;
+    }
     curNode->Rchild->parent=curNode->parent;
     curNode->parent=curNode->Rchild;
     curNode->Rchild=curNode->parent->Lchild;
@@ -106,12 +113,19 @@ PRIVATE void left_rotate(struct tNode *curNode){
 }
 
 PRIVATE void right_rotate(struct tNode *curNode){
-    printf("\nR data: %d\n", curNode->data),P;
+    P;
+    //swap color
     COLOR c=curNode->color;
     curNode->color=curNode->Lchild->color;
     curNode->Lchild->color=c;
+    //update side
     curNode->Lchild->side=curNode->side;
     curNode->side=RIGHT;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Lchild;
+        else curNode->parent->Rchild=curNode->Lchild;
+    }
     curNode->Lchild->parent=curNode->parent;
     curNode->parent=curNode->Lchild;
     curNode->Lchild=curNode->parent->Rchild;
@@ -143,9 +157,10 @@ void print_data(struct tNode *curNode){
     printf("Max: %d, RBTree data:\n", max_print);
     while(now_print<max_print){
         if(curNode->Lchild!=NULL && curNode->Lchild->data > now_print) curNode=curNode->Lchild;
-        else if(curNode->data>now_print){
+        else if(curNode->data > now_print){
             now_print=curNode->data;
             printf("%d\t%d\t%x\tp:%x\tL:%x\tR:%x\n", now_print,curNode->color,curNode,curNode->parent,curNode->Lchild,curNode->Rchild);
+            //printf("%d",curNode->data);
             //(++count)%10==0 ? printf("\n") : printf("\t");
         }
         else if(curNode->Rchild!=NULL && curNode->Rchild->data > now_print) curNode=curNode->Rchild;
