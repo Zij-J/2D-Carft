@@ -4,6 +4,7 @@
 #include "../include/ui.h" // 要放的
 
 #define BACKPACK_POSITION (SDL_position){.x = 100, .y = 100} // 背包的預設位置
+#define BACKPACK_SIZE (SDL_size){.height = 100, .width = 100} // 背包的預設大小
 
 private bool backpack_isOn = false; // 背包是否開啟
 
@@ -31,4 +32,10 @@ public void Backpack_Switch(SDL_Event *event)
 public bool Backpack_isOpen()
 {
     return backpack_isOn;
+}
+
+// 依輸入移動背包的 cursor
+public void Backpack_MoveCursor()
+{
+    // 如果移動到search文字部分，需要改變cursor大小，需在此改變
 }

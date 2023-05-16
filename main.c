@@ -9,6 +9,8 @@
 
 // 背包的search、sort、方塊部分測試開關，完成code後，改成1就可以開啟
 #define TESTING_BACKPACK_FUNCTIONS 0
+// 地圖移動測試開關，完成code後，改成1就可以開啟
+#define TESTING_MAP_FUNCTIONS 0
 
 
 // main函式
@@ -45,28 +47,45 @@ int main(int argc, char** argv)
         if(Backpack_isOpen() == true)
         {
             // 畫背包到 render
-            //Render_RenderToRenderer(renderPicture_backpack);
+            // Render_RenderBackpack();
         
             // 移動背包的 cursor、是否有輸入
             //Backpack_MoveCursor();
             
             #if TESTING_BACKPACK_FUNCTIONS
-            // 有輸入、再執行
-            if(Backpack_isInput() == true)
+            // 有輸入、再執行背包輸入部分
+            if(Backpack_isInput(&event) == true)
             {
-                // 畫出背包
-                Render_RenderBackpack();
+                
             }
             #endif
 
             // 畫背包的 cursor 到 renderer
-            //Render_RenderToRenderer(renderPicture_cursor_backpack);
+            // Render_RenderBackpackCursor();
         }
         // 是否有開背包：沒有
         else
         {
-            
+            #if TESTING_MAP_FUNCTIONS
+            // 有輸入、再執行移動地圖部分
+            if(Map_isInput(&event) == true)
+            {
+                
+            }
+            #endif
+
+            // 畫出地圖、地圖cursor
+            //Render_RenderMap();
+            //Render_RenderBackpackCursor();
         }
+
+        // 移動、顯示快捷欄
+        // HotBar_MoveCursor();
+        // Render_RenderHotbar();
+        // Render_RenderHotbarCursor();
+
+        // 畫出畫面，迴圈結束
+        SDL_RenderPresent(renderer);
     }
 
     // 結束程式

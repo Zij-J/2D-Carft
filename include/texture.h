@@ -2,8 +2,12 @@
 #ifndef TEXTURE
 #define TEXTURE
 
+// unfinished
 void TextureBase_Init();
-int *TextureBase_GetAllID(); // 這裡很不確定要回傳什麼
 void TextureBase_Clear();
+int *TextureBase_GetAllBlock(); // 這裡很不確定要回傳什麼
+SDL_Texture *TetxureBase_GetTexture(int blockID);
+
+// finished
 
 #endif

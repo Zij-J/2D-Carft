@@ -17,10 +17,6 @@
 #define WINDOWS_NAME "2D-Craft"
 enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
-// 方塊邊長
-#define TOTAL_BLOCK_NUMBER_IN_WIDTH 12
-#define BLOCK_WIDTH (WINDOW_HEIGHT / TOTAL_BLOCK_NUMBER_IN_WIDTH) // 用寬能放幾個推算方塊的邊長
-
 // 位置資訊，用 x,y 一起比較方便
 struct pos
 {
@@ -29,5 +25,12 @@ struct pos
 };
 typedef struct pos SDL_position;
 
+// 素材長寬資訊，也是一起存方便
+struct size
+{
+    int width;
+    int height;
+};
+typedef struct size SDL_size;
 
 #endif
