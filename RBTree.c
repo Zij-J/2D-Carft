@@ -1,3 +1,5 @@
+//this code haven't finished debug yet...
+
 #include "RBTree.h"
 
 PRIVATE struct tNode* create_tNode(int data, struct tNode* Parent, SIDE side){
