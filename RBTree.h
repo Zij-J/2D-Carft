@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define PRIVATE static
-#define P printf("file: %s, func: %s, line: %d\n", __FILE__, __func__, __LINE__)
+#define P printf("*file: %s, func: %s, line: %d\n", __FILE__, __func__, __LINE__)
 
 typedef enum {BLACK, RED} COLOR;//node color
 typedef enum {NONE, LEFT, RIGHT} SIDE;//parent's L or R child
@@ -25,3 +25,4 @@ PRIVATE void right_rotate(struct tNode*);
 struct tNode* find_root(struct tNode *);
 void print_root(struct tNode *);
 void print_data(struct tNode *);
+PRIVATE void cp_itsRelation(struct tNode *);
