@@ -14,9 +14,12 @@ int main(){
             case 2:
                 print_data(root);
                 break;
+            case 3:
+                scanf("%d", &num);
+                printf("%x\n",find(root, num));
+                break;
             default:
                 printf("//op wrong\n");
         }
     }
-    P;
 }
