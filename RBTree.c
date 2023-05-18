@@ -1,5 +1,3 @@
-//this code haven't finished debug yet...
-
 #include "RBTree.h"
 
 PRIVATE struct tNode* create_tNode(int data, struct tNode* Parent, SIDE side){
@@ -16,19 +14,21 @@ struct tNode* RBT_init(){
 }
 
 void insert(struct tNode *curNode, int newData) {
-    P;
+    //P;
     if(curNode->data > -1){
         if(newData < curNode->data){
             if(curNode->Lchild==NULL){
                 curNode->Lchild= create_tNode(newData, curNode, LEFT);
-                print_data(curNode),check(curNode->Lchild);
+                //print_data(curNode);
+                check(curNode->Lchild);
             }
             else insert(curNode->Lchild, newData);
         }
         else{
             if(curNode->Rchild==NULL){
                 curNode->Rchild= create_tNode(newData, curNode, RIGHT);
-                print_data(curNode),check(curNode->Rchild);
+                //print_data(curNode);
+                check(curNode->Rchild);
             }
             else insert(curNode->Rchild, newData);
         }
@@ -88,19 +88,20 @@ PRIVATE void check(struct tNode *curNode){
 }
 
 PRIVATE void left_rotate(struct tNode *curNode){
-    P;
+    //P;
     //swap color
     COLOR c=curNode->color;
     curNode->color=curNode->Rchild->color;
     curNode->Rchild->color=c;
-    //update side
-    curNode->Rchild->side=curNode->side;
-    curNode->side=LEFT;
     //change relation
     if(curNode->parent!=NULL){
         if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Rchild;
         else curNode->parent->Rchild=curNode->Rchild;
     }
+    //update side
+    curNode->Rchild->side=curNode->side;
+    curNode->side=LEFT;
+    //change relation
     curNode->Rchild->parent=curNode->parent;
     curNode->parent=curNode->Rchild;
     curNode->Rchild=curNode->parent->Lchild;
@@ -109,23 +110,24 @@ PRIVATE void left_rotate(struct tNode *curNode){
         curNode->Rchild->side=RIGHT;
     }
     curNode->parent->Lchild=curNode;
-    print_data(curNode);
+    //print_data(curNode);
 }
 
 PRIVATE void right_rotate(struct tNode *curNode){
-    P;
+    //P;
     //swap color
     COLOR c=curNode->color;
     curNode->color=curNode->Lchild->color;
     curNode->Lchild->color=c;
-    //update side
-    curNode->Lchild->side=curNode->side;
-    curNode->side=RIGHT;
     //change relation
     if(curNode->parent!=NULL){
         if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Lchild;
         else curNode->parent->Rchild=curNode->Lchild;
     }
+    //update side
+    curNode->Lchild->side=curNode->side;
+    curNode->side=RIGHT;
+    //change relation
     curNode->Lchild->parent=curNode->parent;
     curNode->parent=curNode->Lchild;
     curNode->Lchild=curNode->parent->Rchild;
@@ -134,7 +136,7 @@ PRIVATE void right_rotate(struct tNode *curNode){
         curNode->Lchild->side=LEFT;
     }
     curNode->parent->Rchild=curNode;
-    print_data(curNode);
+    //print_data(curNode);
 }
 
 struct tNode* find_root(struct tNode *curNode){
@@ -159,12 +161,20 @@ void print_data(struct tNode *curNode){
         if(curNode->Lchild!=NULL && curNode->Lchild->data > now_print) curNode=curNode->Lchild;
         else if(curNode->data > now_print){
             now_print=curNode->data;
-            printf("%d\t%d\t%x\tp:%x\tL:%x\tR:%x\n", now_print,curNode->color,curNode,curNode->parent,curNode->Lchild,curNode->Rchild);
-            //printf("%d",curNode->data);
-            //(++count)%10==0 ? printf("\n") : printf("\t");
+            //cp_itsRelation(curNode);
+            printf("%d",now_print);
+            (++count)%10==0 ? printf("\n") : printf("\t");
         }
         else if(curNode->Rchild!=NULL && curNode->Rchild->data > now_print) curNode=curNode->Rchild;
         else curNode=curNode->parent;
     }
-    printf("\n");
+    //printf("\n");
+}
+
+PRIVATE void cp_itsRelation(struct tNode *curNode){//cp: check and print
+    printf("%d\t", curNode->data);
+    curNode->color==RED ? printf("RED\t") : printf("BLACK\t");
+    curNode->Lchild ? printf("L:%d\t",curNode->Lchild->data) : printf("L:NULL\t");
+    curNode->parent ? printf("p:%d\t",curNode->parent->data) : printf("p:NULL\t");
+    curNode->Rchild ? printf("R:%d\n",curNode->Rchild->data) : printf("R:NULL\n");
 }
