@@ -133,28 +133,6 @@ void storedBlock_AddTexture(storedBlock_DataBase storedBlock_ArrayRecord, const 
     qsort(storedBlock_ArrayRecord->array, storedBlock_ArrayRecord->storedSize, sizeof(storedBlock_Data), compareTextures);
     closedir(dir);
 }
-// 載入圖片檔案
-SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
-{
-    // Load the image as a surface
-    SDL_Surface *surface = IMG_Load(filePath);
-    if (!surface)
-    {
-        fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
-        return NULL;
-    }
-
-    // Create a texture from the surface
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture)
-    {
-        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
-    }
-
-    SDL_FreeSurface(surface);
-
-    return texture;
-}
 
 // 取得圖片
 SDL_Texture* storedBlock_GetTexture(storedBlock_DataBase storedBlock_ArrayRecord, char* textureName)
@@ -347,7 +325,7 @@ int main(int argc, char* argv[])
             }
         }
     //刪除指定圖片example_texture   
-    storedBlock_DeleteTexture(storedBlockDB, "example_texture");
+    //storedBlock_DeleteTexture(storedBlockDB, "example_texture");
 
     // Destroy texture, renderer, and window
     for(int i=0; i<n_img; i++) {
