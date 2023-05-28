@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     // 資料庫初始化
     // TextureBase_Init();
     // HotBar_Init();
-    // Maps_Init();
+    // Map_Init();
     
     // 偵測輸入(主迴圈)
     SDL_Event event;
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
             // Render_RenderBackpack();
         
             // 移動背包的 cursor、是否有輸入
-            //Backpack_MoveCursor();
+            //Backpack_MoveCursor(&event);
             
             #if TESTING_BACKPACK_FUNCTIONS
             // 有輸入、再執行背包輸入部分
@@ -70,13 +70,15 @@ int main(int argc, char** argv)
             // 有輸入、再執行移動地圖部分
             if(Map_isInput(&event) == true)
             {
-                
+                // Map_EditBlock(&event); // 依輸入放置、刪除方塊
+                // Render_MoveCamera(); // 依輸入移動 camera
+                // Map_UpdateMaps(); // 依移動結果更新地圖
             }
             #endif
 
             // 畫出地圖、地圖cursor
             //Render_RenderMap();
-            //Render_RenderBackpackCursor();
+            //Render_RenderMapCursor();
         }
 
         // 移動、顯示快捷欄
@@ -89,7 +91,7 @@ int main(int argc, char** argv)
     }
 
     // 結束程式
-    // Maps_Clear();
+    // Map_Clear();
     // HotBar_Clear();
     // TextureBase_Clear();
     SDL_EndAll_StopProgram(&window, &renderer);

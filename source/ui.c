@@ -35,7 +35,7 @@ public bool Backpack_isOpen()
 }
 
 // 依輸入移動背包的 cursor
-public void Backpack_MoveCursor()
+public void Backpack_MoveCursor(SDL_Event *event)
 {
     // 如果移動到search文字部分，需要改變cursor大小，需在此改變
 }

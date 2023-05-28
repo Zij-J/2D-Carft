@@ -3,8 +3,10 @@
 #define MAP
 
 // unfinished
-void Maps_Init();
-void Maps_Clear();
+void Map_Init();
+void Map_Clear();
+void Map_UpdateMaps();
+void Map_EditBlock(SDL_Event *event);
 bool Map_isInput(SDL_Event *event);
 int ***Map_GetTotalMap();
 SDL_position Map_GetUpLeftCornerPosition();

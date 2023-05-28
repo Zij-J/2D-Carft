@@ -4,10 +4,12 @@
 
 // unfinished
 void Render_RenderBackpack();
-void Render_RenderBackpackCursor();
+void Render_RenderMapCursor();
 void Render_RenderMap();
 void Render_RenderHotbar();
 void Render_RenderHotbarCursor();
+void Render_MoveCamera(SDL_Event *event);
+SDL_position Render_GetCameraPosition();
 
 // finished
 
