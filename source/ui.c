@@ -39,3 +39,27 @@ public void Backpack_MoveCursor(SDL_Event *event)
 {
     // 如果移動到search文字部分，需要改變cursor大小，需在此改變
 }
+
+// 取得現在 cursor 在方塊區、還是在搜尋區
+public cursorArea Backpack_GetCursorOnArea()
+{
+    // 要回傳以下三種訊息
+    // return blockArea;
+    // return searchArea;
+    // return nothingArea;
+}
+
+// 把背包選到的方塊更新到選到的 Hotbar 上
+void Backpack_UpdateBlockToHotbar()
+{
+
+}
+
+// 把 cursor 移動到 找到的方塊
+void Backpack_FindBlockAndMoveCursor()
+{
+    // 取得找到的編號
+    // short FoundBlockID = TextureBase_GetSearchedBlockID();
+
+    // 把編號變成位置，把cursor移到那邊
+}

@@ -14,7 +14,7 @@
 
 
 // main函式
-int main(int argc, char** argv) 
+int main(void) 
 {
     // 創立所有 SDL 需要的東西
     SDL_Window* window; 
@@ -56,7 +56,26 @@ int main(int argc, char** argv)
             // 有輸入、再執行背包輸入部分
             if(Backpack_isInput(&event) == true)
             {
-                
+                // 在方塊區域、更新選到的方塊到快捷欄
+                if(Backpack_GetCursorOnArea() == blockArea)
+                    // Backpack_UpdateBlockToHotbar();
+                // 在搜尋區域
+                if(Backpack_GetCursorOnArea() == searchArea)
+                {
+                    // 打搜尋文字、顯示
+                    // SearchWords_GetInputWord(&event);
+                    // Render_RenderSearchWords();
+
+                    // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
+                    if(TextureBase_isFindBlockBySearchWords() == true)
+                    {
+                        // Backpack_FindBlockAndMoveCursor();
+                        // Render_RenderSearchMessage(true);
+                    }
+                    // 沒找到，印 提醒沒找到文字
+                    else
+                        // Render_RenderSearchMessage(false);
+                }   
             }
             #endif
 

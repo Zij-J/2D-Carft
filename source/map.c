@@ -21,10 +21,10 @@ public void Map_Clear()
 }
 
 // 取得要顯示的畫面部分地圖
-public int ***Map_GetTotalgMap()
+public short ***Map_GetTotalgMap()
 {
     // 這樣回傳就可以傳遞二維陣列 + 不用複製整個 Array
-    // int array[2][2];
+    // short array[2][2];
     // return &array;
 }
 
@@ -32,7 +32,7 @@ public int ***Map_GetTotalgMap()
 public void Map_EditBlock(SDL_Event *event)
 {
     // 要取得目前快捷欄選取的方塊編號
-    // int NowChoseBlockID = HotBar_GetChosenBlockID();
+    // short NowChoseBlockID = HotBar_GetChosenBlockID();
 }
 
 // 依新的 camera 位置更新(增加、刪除)地圖

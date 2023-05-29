@@ -8,7 +8,7 @@ void Map_Clear();
 void Map_UpdateMaps();
 void Map_EditBlock(SDL_Event *event);
 bool Map_isInput(SDL_Event *event);
-int ***Map_GetTotalMap();
+short ***Map_GetTotalMap();
 SDL_position Map_GetUpLeftCornerPosition();
 SDL_position Map_GetCursorPosition();
 SDL_size Map_GetBlockSize();

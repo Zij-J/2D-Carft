@@ -76,3 +76,26 @@ public void Render_RenderHotbarCursor()
     // SDL_position cursorPos = Map_GetCursorPosition();
     // SDL_size cursorize = Map_GetCursorSize();
 }
+
+// 畫出已打的字
+public void Render_RenderSearchWords()
+{
+    // 要取得打字處的開頭、字的大小
+    // SDL_position wordStartPos = Backpack_GetSearchWordPosition();
+    // SDL_size wordize = Backpack_GetSearchWordSize();
+}
+
+// 畫出 搜尋成功 or 失敗 的文字
+public void Render_RenderSearchMessage(bool isSuccessSearching)
+{
+    // 成功文字
+    if(isSuccessSearching)
+    {
+
+    }
+    // 失敗文字
+    else
+    {
+        
+    }
+}
