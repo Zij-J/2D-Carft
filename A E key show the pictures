@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include "./SDL2/SDL.h"
+#include "./SDL2/SDL_image.h"
+#undef main
+
+int main(int argc, char** argv) {
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    // Initialize SDL_image
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        fprintf(stderr, "Failed to initialize SDL_image: %s\n", IMG_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    // Create window
+    SDL_Window* window = SDL_CreateWindow("SDL Image Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 480, SDL_WINDOW_SHOWN);
+    if (!window) {
+        fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    // Create renderer
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+        SDL_DestroyWindow(window);
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    // Load image 1 as texture
+    SDL_Texture* imageTexture1 = IMG_LoadTexture(renderer, "backpack2.png");
+    if (!imageTexture1) {
+        fprintf(stderr, "Failed to load image 1: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    // Load image 2 as texture
+    SDL_Texture* imageTexture2 = IMG_LoadTexture(renderer, "image.png");
+    if (!imageTexture2) {
+        fprintf(stderr, "Failed to load image 2: %s\n", IMG_GetError());
+        SDL_DestroyTexture(imageTexture1);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    // Set the destination rectangle for image 1
+    
+    SDL_Rect destRect1;
+    destRect1.x = 180;  // x-coordinate of the destination rectangle
+    destRect1.y = 140;  // y-coordinate of the destination rectangle
+    destRect1.w = 400;  // width of the destination rectangle
+    destRect1.h = 200;  // height of the destination rectangle
+
+    // Set the destination rectangle for image 2
+    SDL_Rect destRect2;
+    destRect2.x =204 + 41.246 * 0;  //204+41.246*n// x-coordinate of the destination rectangle
+    destRect2.y = 158 + 42 * 0;  //158+42*n/ y-coordinate of the destination rectangle
+    destRect2.w = 25;  // width of the destination rectangle
+    destRect2.h = 25;  // height of the destination rectangle
+    //快捷y位置 158+135
+    // Set initial texture visibility
+    int texture1Visible = 1;
+    int texture2Visible = 1;
+
+    // Main loop
+    SDL_Event event;
+    while (SDL_WaitEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                goto end;
+            case SDL_KEYDOWN:
+                if (event.key.keysym.sym == SDLK_e) {
+                    // Toggle texture 1 visibility
+                    texture1Visible = !texture1Visible;
+                }
+                else if (event.key.keysym.sym == SDLK_a) {
+                    // Toggle texture 2 visibility
+                    texture2Visible = !texture2Visible;
+                }
+                break;
+        }
+
+        // Clear renderer
+        SDL_RenderClear(renderer);
+
+        if (texture1Visible) {
+            // Copy texture 1 to renderer
+            SDL_RenderCopy(renderer, imageTexture1, NULL, &destRect1);
+        }
+
+        if (texture2Visible) {
+            // Copy texture 2 to renderer
+            SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2);
+        }
+
+        // Update renderer
+        SDL_RenderPresent(renderer);
+    }
+
+end:
+    // Destroy textures, renderer, and window
+    SDL_DestroyTexture(imageTexture1);
+    SDL_DestroyTexture(imageTexture2);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
+    // Quit SDL_image and SDL
+    IMG_Quit();
+    SDL_Quit();
+
+    return 0;
+}
