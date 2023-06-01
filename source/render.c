@@ -12,11 +12,13 @@
 #define DEFULT_ARRAY_SIZE 2 // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72 // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
-enum searchWord_colorData {searchWord_red = 255, searchWord_blue = 255, searchWord_green = 255}; // 大 
 
-// 記住的 renderer、文字 Font
+// 記住的 renderer
 SDL_Renderer *renderer;
+
+// 記住的文字 Font、成功失敗文字
 TTF_Font *font;
+SDL_Texture *searchNotify_Texture[2]; // read [] and () before *，所以是放2個pointer的array
 
 // 相機位置
 SDL_position camera = (SDL_position){.x = 0, .y = 0}; 
@@ -117,22 +119,19 @@ public void Render_RenderHotbarCursor()
 public void Render_RenderSearchWords()
 {
     // 要取得打字處的開頭、字的大小
-    // SDL_position wordStartPos = Backpack_GetSearchWordPosition();
-    // SDL_size wordize = Backpack_GetSearchWordSize();
+    SDL_position wordStartPos = Backpack_GetSearchWordPosition();
+    SDL_size wordSize = Backpack_GetSearchWordSize();
 
-    SDL_position wordStartPos = (SDL_position){.x = 50, .y = 60};
-    SDL_size wordSize = (SDL_size){.width = 25, .height = 50};
-
-    // 
+    // 顯示文字
     int totalWidthNow = 0;
     for(int i = 0; (*searchWords).words[i] != '\0'; ++i)
     {
         // 取得字大小
-        int originalwordWidth, originalWordHeight;
+        SDL_size originalSize;
         char nowCharToString[2]; sprintf(nowCharToString, "%c\0", (*searchWords).words[i]); // 怕只能處理 string，所以要轉成 string
-        TTF_SizeText(font, nowCharToString, &originalwordWidth, &originalWordHeight); // 取得 font 原本大小
-        float widthScaling = (float)wordSize.height / (float)originalWordHeight; // 換成 float ，處理縮放
-        wordSize.width = originalwordWidth * widthScaling; // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
+        TTF_SizeText(font, nowCharToString, &originalSize.width, &originalSize.height); // 取得 font 原本大小
+        float widthScaling = (float)wordSize.height / (float)originalSize.height; // 換成 float ，處理縮放
+        wordSize.width = originalSize.width * widthScaling; // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
 
         // 大小，位置確定
         SDL_Rect wordRect;
@@ -173,6 +172,18 @@ public void SearchWords_Init()
         TTF_Quit();
         SDL_EndAll_StopProgram();
     }
+
+    // 提醒文字，預先 load 好
+    SDL_Color wordColor[2]; Backpack_GetSearchNotifyColor(wordColor); // 取得文字顏色
+    char *wordsContents[2]; Backpack_GetSearchNotifyContent(wordsContents); // 取得文字
+    SDL_Surface *wordsSerface;
+    for(int i = 0; i  <= 1; ++i)
+    {
+        wordsSerface = TTF_RenderText_Solid(font, wordsContents[i], wordColor[i]); 
+        
+        searchNotify_Texture[i] = SDL_CreateTextureFromSurface(renderer, wordsSerface); // serface 轉 texture
+        SDL_FreeSurface(wordsSerface); // serface 沒用了
+    }  
 }
 
 // 開啟 Font ，失敗都回傳 NULL，成功就回傳 TTF_OpenFont get的東西
@@ -199,9 +210,7 @@ private TTF_Font *SearchWords_openFont()
         int fileName_lastFourWordStartIndex = strlen((*fileData).d_name) -1 -3; // -1 換 0-base，因不含\0，會到末index，-3是到前3 index，也就是前4個字
         char fileName_lastFourWords[4 +1];
         for(int i = 0; i < 4; ++i)
-        {
             fileName_lastFourWords[i] = (*fileData).d_name[fileName_lastFourWordStartIndex +i];
-        }
         fileName_lastFourWords[4] = '\0';
 
         // 是否最後四個字(副檔名) 是 ".ttf"
@@ -219,7 +228,11 @@ private TTF_Font *SearchWords_openFont()
 // 清除，搜尋文字 Array
 public void SearchWords_Clear()
 {
-    // free 掉 Texture
+    // free 掉 提醒文字 Texture
+    SDL_DestroyTexture(searchNotify_Texture[searchNotifyIndex_success]);
+    SDL_DestroyTexture(searchNotify_Texture[searchNotifyIndex_failure]);
+
+    // free 掉搜尋 Texture
     for(int i = 0; i < (*searchWords).nowStored; ++i)
         SDL_DestroyTexture((*searchWords).wordsTexture[i]);
 
@@ -265,13 +278,12 @@ public void SearchWords_GetInputWord(SDL_Event event)
             char inputChar = (char)event.key.keysym.sym;
             if('a' <= inputChar && inputChar <= 'z')
             {
-                if(event.key.keysym.mod == KMOD_CAPS || (event.key.keysym.mod == KMOD_LSHIFT || event.key.keysym.mod == KMOD_RSHIFT)) // 偵測這是否在 CapsLock 或 按著 shift 時打的
+                if(event.key.keysym.mod & (KMOD_CAPS |(KMOD_LSHIFT | KMOD_RSHIFT))) // 偵測這是否在 CapsLock 或 按著 shift 時打的
                     inputChar = inputChar - 'a' + 'A';
             }
             else
-                 SearchWords_chaningPressingShift(&inputChar, event); // 按 shift 的變動 
+                SearchWords_chaningPressingShift(&inputChar, event); // 按 shift 的變動 
             
-
             // 取得要存入的 index
             ++(*searchWords).nowStored;            
             int nowStoredIndex = (*searchWords).nowStored -1 -1; // -1到 0-base，是\0後面，再 -1 才到 \0
@@ -279,8 +291,8 @@ public void SearchWords_GetInputWord(SDL_Event event)
             (*searchWords).words[nowStoredIndex] = inputChar;
             (*searchWords).words[nowStoredIndex +1] = '\0'; // 記得補回 \0
             // 存入(Texture)
+            SDL_Color wordColor = Backpack_GetSearchWordColor(); // 取得文字顏色
             char InputtedcharToString[2]; sprintf(InputtedcharToString, "%c\0", inputChar); // 怕只能處理 string，所以要轉成 string
-            SDL_Color wordColor = {searchWord_red, searchWord_blue, searchWord_green};
             SDL_Surface* wordsSerface = TTF_RenderText_Solid(font, InputtedcharToString, wordColor); // 只能畫在 serface
             SDL_Texture* wordsTexture = SDL_CreateTextureFromSurface(renderer, wordsSerface); // serface 轉 texture
             SDL_FreeSurface(wordsSerface); // serface 沒用了
@@ -300,74 +312,74 @@ public void SearchWords_GetInputWord(SDL_Event event)
 // 按住 shift 要變換字，需手動寫
 private void SearchWords_chaningPressingShift(char *inputChar, SDL_Event event)
 { 
-    if(event.key.keysym.mod != KMOD_LSHIFT && event.key.keysym.mod != KMOD_RSHIFT) // 要按 shift 才要改
-        return;
-
-    switch (event.key.keysym.sym)
+    if(event.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT)) // 他是用 bitstream 設計是否有按 or 重複按鍵盤的 
     {
-        case SDLK_BACKQUOTE:
-            (*inputChar) = '~';
-            break;
-        case SDLK_1:
-            (*inputChar) = '!';
-            break;
-        case SDLK_2:
-            (*inputChar) = '@';
-            break;
-        case SDLK_3:
-            (*inputChar) = '#';
-            break;
-        case SDLK_4:
-            (*inputChar) = '$';
-            break;
-        case SDLK_5:
-            (*inputChar) = '%';
-            break;
-        case SDLK_6:
-            (*inputChar) = '^';
-            break;
-        case SDLK_7:
-            (*inputChar) = '&';
-            break;
-        case SDLK_8:
-            (*inputChar) = '*';
-            break;
-        case SDLK_9:
-            (*inputChar) = '(';
-            break;
-        case SDLK_0:
-            (*inputChar) = ')';
-            break;
-        case SDLK_MINUS:
-            (*inputChar) = '_';
-            break;
-        case SDLK_EQUALS:
-            (*inputChar) = '+';
-            break;
-        case SDLK_LEFTBRACKET:
-            (*inputChar) = '{';
-            break;
-        case SDLK_RIGHTBRACKET:
-            (*inputChar) = '}';
-            break;
-        case SDLK_BACKSLASH:
-            (*inputChar) = '|';
-            break;
-        case SDLK_SEMICOLON:
-            (*inputChar) = ':';
-            break;
-        case SDLK_QUOTE:
-            (*inputChar) = '"';
-            break;
-        case SDLK_COMMA:
-            (*inputChar) = '<';
-            break;
-        case SDLK_PERIOD:
-            (*inputChar) = '>';
-            break;
-        case SDLK_SLASH:
-            (*inputChar) = '?';
-            break;
+        switch (event.key.keysym.sym)
+        {
+            case SDLK_BACKQUOTE:
+                (*inputChar) = '~';
+                break;
+            case SDLK_1:
+                (*inputChar) = '!';
+                break;
+            case SDLK_2:
+                (*inputChar) = '@';
+                break;
+            case SDLK_3:
+                (*inputChar) = '#';
+                break;
+            case SDLK_4:
+                (*inputChar) = '$';
+                break;
+            case SDLK_5:
+                (*inputChar) = '%';
+                break;
+            case SDLK_6:
+                (*inputChar) = '^';
+                break;
+            case SDLK_7:
+                (*inputChar) = '&';
+                break;
+            case SDLK_8:
+                (*inputChar) = '*';
+                break;
+            case SDLK_9:
+                (*inputChar) = '(';
+                break;
+            case SDLK_0:
+                (*inputChar) = ')';
+                break;
+            case SDLK_MINUS:
+                (*inputChar) = '_';
+                break;
+            case SDLK_EQUALS:
+                (*inputChar) = '+';
+                break;
+            case SDLK_LEFTBRACKET:
+                (*inputChar) = '{';
+                break;
+            case SDLK_RIGHTBRACKET:
+                (*inputChar) = '}';
+                break;
+            case SDLK_BACKSLASH:
+                (*inputChar) = '|';
+                break;
+            case SDLK_SEMICOLON:
+                (*inputChar) = ':';
+                break;
+            case SDLK_QUOTE:
+                (*inputChar) = '"';
+                break;
+            case SDLK_COMMA:
+                (*inputChar) = '<';
+                break;
+            case SDLK_PERIOD:
+                (*inputChar) = '>';
+                break;
+            case SDLK_SLASH:
+                (*inputChar) = '?';
+                break;
+        }
     }
 }
 
@@ -378,16 +390,28 @@ public char *SearchWords_GetSearchingWords()
 }
 
 // 畫出 搜尋成功 or 失敗 的文字
-public void Render_RenderSearchMessage(bool isSuccessSearching)
+public void Render_RenderSearchNotify(bool isSuccessSearching)
 {
-    // 成功文字
-    if(isSuccessSearching)
-    {
+    // 取得所有要顯示的資訊
+    SDL_position rectPos = Backpack_GetSearchNotifyPosition();
+    SDL_size rectSize = Backpack_GetSearchNotifySize();
+    char *noticeContents[2]; Backpack_GetSearchNotifyContent(noticeContents);
+    
+    // 要顯示甚麼文字
+    int shownNoticeIndex = isSuccessSearching? searchNotifyIndex_success : searchNotifyIndex_failure;
 
-    }
-    // 失敗文字
-    else
-    {
-        
-    }
+    // 直接算文字總長度
+    rectSize.width *= strlen(noticeContents[shownNoticeIndex]);
+
+    // 取得字大小
+    SDL_size originSize;
+    TTF_SizeText(font, noticeContents[shownNoticeIndex], &originSize.width, &originSize.height); // 取得 font 原本大小
+    float widthScaling = (float)rectSize.height / (float)originSize.height; // 換成 float ，處理縮放
+    rectSize.width = originSize.width * widthScaling; // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
+
+    // 大小，位置確定
+    SDL_Rect wordRect = {.x = rectPos.x, .y = rectPos.y, .w = rectSize.width, .h = rectSize.height};
+
+    // 顯示此段字
+    SDL_RenderCopy(renderer, searchNotify_Texture[shownNoticeIndex], NULL, &wordRect);
 }
