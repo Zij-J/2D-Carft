@@ -3,6 +3,6 @@
 #define START_END_SDL
 
 void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer);
-void SDL_EndAll_StopProgram(SDL_Window **window, SDL_Renderer **renderer);
+void SDL_EndAll_StopProgram();
 
 #endif
