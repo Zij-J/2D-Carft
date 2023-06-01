@@ -11,26 +11,26 @@ void HotBar_Clear();
 void HotBar_MoveCursor();
 void HotBar_GetAllID();
 short HotBar_GetChosenBlockID();
-void Backpack_MoveCursor(SDL_Event *event);
+void Backpack_MoveCursor(SDL_Event event);
 void Backpack_UpdateBlockToHotbar();
 void Backpack_FindBlockAndMoveCursor();
-bool Backpack_isInput(SDL_Event *event);
+bool Backpack_isInput(SDL_Event event);
 SDL_position Hotbar_GetPosition();
 SDL_position Hotbar_GetCursorPosition();
 SDL_position Backpack_GetPosition();
 SDL_position Backpack_GetBlockStartPosition();
 SDL_position Backpack_GetCursorPosition();
-SDL_position Backpack_GetSearchWordPosition();
+SDL_position Backpack_GetSearchWordPosition(); // 做完需要改 Render_RenderSearchWords()
 SDL_size Hotbar_GetSize();
 SDL_size HotBar_GetCursorSize();
 SDL_size Backpack_GetSize();
 SDL_size Backpack_GetBlockSize();
 SDL_size Backpack_GetCursorSize();
-SDL_size Backpack_GetSearchWordSize();
+SDL_size Backpack_GetSearchWordSize(); // 做完需要改 Render_RenderSearchWords()
 cursorArea Backpack_GetCursorOnArea();
 
 // finished
-void Backpack_Switch(SDL_Event *event);
+void Backpack_Switch(SDL_Event event);
 bool Backpack_isOpen();
 
 #endif

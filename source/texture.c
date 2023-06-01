@@ -1,5 +1,6 @@
 /* 材質(背包)資料庫(紅黑樹？)、Sort、Search 與 相關function (file I/O：編號對應材質名 file、圖片資料夾)*/
 #include "../include/basicSetting.h" // 要用的
+#include "../include/render.h" // 要用的
 #include "../include/texture.h" // 要放的
 
 // 匯入編號對應材質名字 file
@@ -37,6 +38,9 @@ public bool TextureBase_isFindBlockBySearchWords()
 {
     // 要匯入編號對應材質名字 file 到 編號對應材質名 array (因為這個功能不會常用，所以用了再 Init 就好，不用一直存著)
     // IDtoNameBase_Init();
+
+    // 取得搜尋文字
+    char *searchingWords = SearchWords_GetSearchingWords();
 
     // 要記錄著找到的編號，但不用回傳
 }

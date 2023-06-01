@@ -21,7 +21,7 @@ public void Map_Clear()
 }
 
 // 取得要顯示的畫面部分地圖
-public short ***Map_GetTotalgMap()
+public short **Map_GetTotalgMap()
 {
     // 這樣回傳就可以傳遞二維陣列 + 不用複製整個 Array
     // short array[2][2];
@@ -29,7 +29,7 @@ public short ***Map_GetTotalgMap()
 }
 
 // 依輸入放置、刪除方塊
-public void Map_EditBlock(SDL_Event *event)
+public void Map_EditBlock(SDL_Event event)
 {
     // 要取得目前快捷欄選取的方塊編號
     // short NowChoseBlockID = HotBar_GetChosenBlockID();

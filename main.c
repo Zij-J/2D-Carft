@@ -25,6 +25,9 @@ int main(void)
     // TextureBase_Init();
     // HotBar_Init();
     // Map_Init();
+    SearchWords_Init();
+    // 讓 render source file 記住 renderer，就不用每次 render 都要傳入
+    Render_RememberRenderer(renderer);
     
     // 偵測輸入(主迴圈)
     SDL_Event event;
@@ -41,7 +44,7 @@ int main(void)
         SDL_RenderClear(renderer);
 
         // 開關背包
-        Backpack_Switch(&event);
+        Backpack_Switch(event);
 
         // 是否有開背包：有
         if(Backpack_isOpen() == true)
@@ -50,11 +53,11 @@ int main(void)
             // Render_RenderBackpack();
         
             // 移動背包的 cursor、是否有輸入
-            //Backpack_MoveCursor(&event);
-            
+            //Backpack_MoveCursor(event);
+
             #if TESTING_BACKPACK_FUNCTIONS
             // 有輸入、再執行背包輸入部分
-            if(Backpack_isInput(&event) == true)
+            if(Backpack_isInput(event) == true)
             {
                 // 在方塊區域、更新選到的方塊到快捷欄
                 if(Backpack_GetCursorOnArea() == blockArea)
@@ -62,9 +65,8 @@ int main(void)
                 // 在搜尋區域
                 if(Backpack_GetCursorOnArea() == searchArea)
                 {
-                    // 打搜尋文字、顯示
-                    // SearchWords_GetInputWord(&event);
-                    // Render_RenderSearchWords();
+                    // 輸入搜尋文字
+                    SearchWords_GetInputWord(event);
 
                     // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
                     if(TextureBase_isFindBlockBySearchWords() == true)
@@ -79,7 +81,8 @@ int main(void)
             }
             #endif
 
-            // 畫背包的 cursor 到 renderer
+            // 畫背包的 cursor、搜尋文字 到 renderer
+            Render_RenderSearchWords();
             // Render_RenderBackpackCursor();
         }
         // 是否有開背包：沒有
@@ -87,9 +90,9 @@ int main(void)
         {
             #if TESTING_MAP_FUNCTIONS
             // 有輸入、再執行移動地圖部分
-            if(Map_isInput(&event) == true)
+            if(Map_isInput(event) == true)
             {
-                // Map_EditBlock(&event); // 依輸入放置、刪除方塊
+                // Map_EditBlock(event); // 依輸入放置、刪除方塊
                 // Render_MoveCamera(); // 依輸入移動 camera
                 // Map_UpdateMaps(); // 依移動結果更新地圖
             }
@@ -110,8 +113,9 @@ int main(void)
     }
 
     // 結束程式
+    SearchWords_Clear();
     // Map_Clear();
     // HotBar_Clear();
     // TextureBase_Clear();
-    SDL_EndAll_StopProgram(&window, &renderer);
+    SDL_EndAll_StopProgram();
 }

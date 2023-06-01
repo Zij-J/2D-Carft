@@ -17,9 +17,9 @@ public void HotBar_Init()
 }
 
 // 依輸入開關背包
-public void Backpack_Switch(SDL_Event *event)
+public void Backpack_Switch(SDL_Event event)
 {
-    if((*event).type == SDL_KEYDOWN && (*event).key.keysym.sym == SDLK_e)
+    if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_e)
     {
         if(backpack_isOn == false)
             backpack_isOn = true;
@@ -35,7 +35,7 @@ public bool Backpack_isOpen()
 }
 
 // 依輸入移動背包的 cursor
-public void Backpack_MoveCursor(SDL_Event *event)
+public void Backpack_MoveCursor(SDL_Event event)
 {
     // 如果移動到search文字部分，需要改變cursor大小，需在此改變
 }
