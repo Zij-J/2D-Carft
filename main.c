@@ -22,7 +22,7 @@ int main(void)
     SDL_InitializeAll(&window, &renderer);
 
     // 資料庫初始化
-    // TextureBase_Init();
+    TextureBase_Init(renderer);
     // HotBar_Init();
     // Map_Init();
     SearchWords_Init();
@@ -116,6 +116,6 @@ int main(void)
     SearchWords_Clear();
     // Map_Clear();
     // HotBar_Clear();
-    // TextureBase_Clear();
+    TextureBase_Clear();
     SDL_EndAll_StopProgram();
 }
