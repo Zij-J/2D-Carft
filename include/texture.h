@@ -16,7 +16,7 @@ short *TextureBase_GetAllID();// 取得材質資料庫所有的材質ID
 
 // unused // 最終沒用到，但很好用！
 void TextureBase_DeleteTexture(const char* textureName); //刪除指定圖片
-void TextureBase_SortBaseByID(); //依照方塊編號大小排序資料庫
+void IDtoNameBase_SortBaseByID(); //依照方塊編號大小排序資料庫
 SDL_Texture *TextureBase_GetTextureName(char* textureName);// 依方塊名稱取得圖片 
 
 #endif

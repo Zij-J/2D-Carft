@@ -352,7 +352,7 @@ public short *TextureBase_GetAllID()
 }
 
 //依照方塊編號大小排序資料庫 // (似乎不用用到，但應該很好用！)
-void TextureBase_SortBaseByID()
+void IDtoNameBase_SortBaseByID()
 {
     // Sort the array by blockID in ascending order using bubble sort
     for (int i = 0; i < IDtoNameBase->storedSize - 1; ++i)
