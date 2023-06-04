@@ -21,7 +21,7 @@ extern SDL_position cursor_xy;//cursor_abs_pos
 // finished
 
 void Map_Init();
-private void Map_Finput(FILE *fp, int n, int x, int y);
+private void Map_Finput(FILE *fp, int n, int x, int y);//need to get Grass_Block number
 void Map_Clear();
 void Map_UpdateMaps(SDL_Event event);
 void swap(int* a, int* b);
