@@ -1,21 +1,19 @@
 /* map大陣列(需存地圖上絕對位置)、地圖file、地圖cursor 與 相關 function (file I/O：map file)*/
-//#include "../include/basicSetting.h"
-//#include "../include/basicSetting.h"
-//#include "../include/ui.h"
-//#include "../include/render.h"
+#include "../include/basicSetting.h"
 #include "../include/map.h"
-#include<string.h>
+
 
 SDL_position camera_xy={.x=0, .y=0};
 SDL_position arr_xy[4];
 SDL_position cursor_xy;
+
 
 FILE *fp[4];
 short map[4][ARRAY_MAP_WIDTH][ARRAY_MAP_WIDTH]; //4 big array
 int arr_relative_pos[4]; //[0]: UpLeft, [1]: UpRight, [2]: DownLeft, [3]: DownRight, n: map[n]
 
 //map initialize when program start
-void Map_Init()
+public void Map_Init()
 {
     //file input map
     Map_Finput(fp[0], 0, 0, 0);
@@ -165,6 +163,15 @@ bool Map_isInput(SDL_Event event)
 }
 
 // 取得要顯示的畫面部分地圖 //altered by using extern array
+
+// 清除地圖
+public void Map_Clear()
+{
+    // 要 file output!
+}
+
+// 取得要顯示的畫面部分地圖
+
 public short **Map_GetTotalgMap()
 {
     // 這樣回傳就可以傳遞二維陣列 + 不用複製整個 Array
@@ -233,4 +240,20 @@ private char* file_name(int x, int y){
     strcat(name, ".txt");
     printf("%s\n", name);
     return &name[0];
+}
+
+// 依輸入放置、刪除方塊
+public void Map_EditBlock(SDL_Event event)
+{
+    // 要取得目前快捷欄選取的方塊編號
+    // short NowChoseBlockID = HotBar_GetChosenBlockID();
+}
+
+// 依新的 camera 位置更新(增加、刪除)地圖
+public void Map_UpdateMaps()
+{
+    // 取得 camera 座標
+    // SDL_position cameraPos = Render_GetCameraPosition();
+
+    // if 在大陣列外，file output 舊地圖，file input 新地圖 (如果有新地圖，需生成)
 }

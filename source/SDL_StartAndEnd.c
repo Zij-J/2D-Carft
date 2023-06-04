@@ -3,6 +3,10 @@
 #include "../include/basicSetting.h" //要用的
 #include "../include/SDL_StartAndEnd.h" //要放的
 
+// 偷記 windows、renderer，這樣 StopProgram 就可以直接呼叫，不用 parameter
+SDL_Window *rememberedWindow;
+SDL_Renderer *rememberedRenderer;
+
 // 初始化 SDL、SDL_Image、創立windows、renderer
 void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
 {
@@ -30,6 +34,7 @@ void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
         SDL_Quit();
         exit(EXIT_FAILURE); 
     }
+    rememberedWindow = *window;
 
     // Create renderer
     *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
@@ -41,14 +46,15 @@ void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
         SDL_Quit();
         exit(EXIT_FAILURE);
     }
+    rememberedRenderer = *renderer;
 }
 
 // 關閉 renderer、windows、SDL_Image、SDL後，結束程式
-void SDL_EndAll_StopProgram(SDL_Window **window, SDL_Renderer **renderer)
+void SDL_EndAll_StopProgram()
 {
     // Destroy renderer, and window
-    SDL_DestroyRenderer(*renderer);
-    SDL_DestroyWindow(*window);
+    SDL_DestroyRenderer(rememberedRenderer);
+    SDL_DestroyWindow(rememberedWindow);
 
     // Quit SDL_image and SDL
     IMG_Quit();

@@ -14,12 +14,11 @@ extern SDL_position arr_xy[4];//big_arr_abs_pos
 extern SDL_position cursor_xy;//cursor_abs_pos
 
 // unfinished
-
 //bool Map_isInput(SDL_Event event);//not need now //merge in Map_EditBlock()
 //short **Map_GetTotalMap(); //altered by using extern array
 
-// finished
 
+// finished
 void Map_Init();
 private void Map_Finput(FILE *fp, int n, int x, int y);
 void Map_Clear();
