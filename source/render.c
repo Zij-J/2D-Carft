@@ -12,6 +12,7 @@
 #define DEFULT_ARRAY_SIZE 2 // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72 // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
+#define CAMERA_MOVE_SPEED 1 // 相機移動速度 
 enum searchWord_colorData {searchWord_red = 255, searchWord_blue = 255, searchWord_green = 255}; // 大 
 
 // 記住的 renderer、文字 Font
@@ -19,7 +20,7 @@ SDL_Renderer *renderer;
 TTF_Font *font;
 
 // 相機位置
-SDL_position camera = (SDL_position){.x = 0, .y = 0}; 
+SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0}; 
 
 // 搜尋文字 Array 建立 (存字串 for 比對，存 SDL_Texture for 快速顯示，不用每次顯示都要 load Texture)
 struct wordsArray_tmpStructName
@@ -76,15 +77,32 @@ public void Render_RenderBackpackCursor()
 // 依 camera 差距，畫出地圖
 public void Render_RenderMap()
 {
-    // 取得 Map 大陣列全部、左上角位置、方塊大小
-    // int ***Map = Map_GetTotalMap();
-    // SDL_position upLeftCornerPos = Map_GetUpLeftCornerPosition();
-    // SDL_size blockSize = Map_GetBlockSize();
-
-    // 要算出 camera 相對位置
+    // 取得 Map 要顯示大陣列全部(因為要一直分記憶體很麻煩，所以用static，並初始化以判斷是否要分記憶體)、左上角位置、方塊大小、長寬方塊數量
+    static short **renderingMap = NULL; SDL_size totalBlockNumInWindow ; Map_GetShowedMapData(&renderingMap, &totalBlockNumInWindow);
+    SDL_size blockSize = Map_GetBlockSize();
+    SDL_position startBlockPos = Map_GetUpLeftCornerPosition();
+    startBlockPos.x *= blockSize.width; startBlockPos.y *= blockSize.height; // 取得的位置是「方塊數量位置」不是真正座標，要換成真正座標 (for renderCopy)
 
     // get 目前 block 的材質
     // SDL_Texture *blockTexture = TetxureBase_GetTexture();
+    SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Grass_Block.png");
+
+    SDL_position nowBlockPos = startBlockPos;
+    for(int y = 0; y < totalBlockNumInWindow.height; ++y)
+    {
+        nowBlockPos.x = startBlockPos.x;
+        for(int x = 0; x < totalBlockNumInWindow.width; ++x)
+        {
+            if(renderingMap[y][x] != NO_BLOCK_ID)
+            {
+                SDL_Rect rect = (SDL_Rect) {.x = nowBlockPos.x - cameraPosition.x, .y = cameraPosition.y - nowBlockPos.y, .w = blockSize.width, .h = blockSize.height};
+                SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
+            }
+            
+            nowBlockPos.x += blockSize.width;
+        }
+        nowBlockPos.y -= blockSize.height;     
+    }
 }
 
 // 依 camera 差距，畫出背包的 cursor
@@ -390,4 +408,35 @@ public void Render_RenderSearchMessage(bool isSuccessSearching)
     {
         
     }
+}
+
+// 移動相機
+public void Render_MoveCamera(SDL_Event event)
+{
+    if (event.type == SDL_KEYDOWN)
+    {
+        switch(event.key.keysym.sym)
+        {
+            case SDLK_w:
+                cameraPosition.y += CAMERA_MOVE_SPEED;
+                break;
+            case SDLK_s:
+                cameraPosition.y -= CAMERA_MOVE_SPEED;
+                break;
+            case SDLK_d:
+                cameraPosition.x += CAMERA_MOVE_SPEED;
+                break;
+            case SDLK_a:
+                cameraPosition.x -= CAMERA_MOVE_SPEED;
+                break;
+        }
+    }
+}
+
+// 取得相機絕對位置(有換成/ BLOCK_WIDTH的座標，以方塊為單位)
+public SDL_position Render_GetCameraPosition()
+{
+    SDL_size blockSize= Map_GetBlockSize();
+    SDL_position cameraBlockPos = (SDL_position){.x = cameraPosition.x /blockSize.width, .y = cameraPosition.y /blockSize.height};
+    return cameraBlockPos;
 }
