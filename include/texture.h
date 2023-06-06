@@ -14,6 +14,7 @@ bool TextureBase_isFindBlockBySearchWords();// 依搜尋文字，找找看是否
 short TextureBase_GetSearchedBlockID();// 把搜尋到的方塊編號回傳
 SDL_Texture *loadTexture();// 載入圖片資料夾圖片
 SDL_Texture *TextureBase_GetTextureName();// 依方塊名稱取得圖片
+SDL_Texture *TextureBase_GetTextureByID();// 依編號取得圖片
 SDL_Texture *TextureBase_GetTextureID();//依照方塊編號大小排序資料庫
 
 #endif
