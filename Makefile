@@ -8,7 +8,7 @@ source := $(basename $(source))
 source := $(addsuffix .o, $(source)) 
 codes := main.o $(source)
 # dll 與 exe 也定義一下
-dlls := SDL2.dll SDL2_image.dll
+dlls := SDL2.dll SDL2_image.dll SDL2_ttf.dll
 exe := main.exe
 # header 變動也要處理！用 wildcard 就可處理全部在 include 內的.h
 headers := $(wildcard include/*.h)
