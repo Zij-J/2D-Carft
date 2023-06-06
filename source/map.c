@@ -47,9 +47,8 @@ public void Map_Init()
 
 //map file input (fp[n], n, file_map_x, file_map_x)
 private void Map_Finput(int n, int x, int y){
-    printf("in:");
     //open file + save array absolute position (用全域變數存！)
-    fp[n] = fopen(file_name(x,y), "r");
+    fp[n] = fopen(file_name(x,y), "r"); 
     if(fp[n]==NULL) fp[n] = fopen(file_name(x,y), "w+"); // 如果打不開，fopen 會回傳 null，代表要創新檔案
     arr_xy[n].x= x; // 因為傳絕對座標了，所以直接存
     arr_xy[n].y= y; // 因為傳絕對座標了，所以直接存
@@ -70,10 +69,9 @@ private void Map_Finput(int n, int x, int y){
         fseek(fp[n], 0, SEEK_SET);
         for(int i=0; i<ARRAY_MAP_WIDTH; i++){
             for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-                fscanf(fp[n], "%d", &map[n][i][j]);
+                fscanf(fp[n], "%hd ", &map[n][i][j]); // 一定要用 hd 去 read ，不知道為何不會強制轉型，導致程式直接結束，所以改正
         }
     }
-    printf(" in OK\n");
 }
 
 //return "map/map_x_y.txt" // 我把地圖放到 map 資料夾了！用 "map/map_x_y.txt" 可在 map 資料夾下創地圖
@@ -110,7 +108,6 @@ private char* file_name(int x, int y){
         strcat(name, tmp);
     }
     strcat(name, ".txt");
-    printf("%s\n", name);
     return &name[0];
 }
 
@@ -124,12 +121,11 @@ public void Map_Clear()
 
 //map file output (fp[n], n, file_name)
 private void Map_Foutput(FILE *fp, int n, char* FileName){
-    printf("(out)\n");
     fp = fopen(FileName, "w+"); //clear file
     fseek(fp, 0, SEEK_SET);
     for(int i=0; i<ARRAY_MAP_WIDTH; i++){
         for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-            fprintf(fp, "%d\t", map[n][i][j]);
+            fprintf(fp, "%hd\t", map[n][i][j]);
         fprintf(fp, "\n");
     }
     fclose(fp);

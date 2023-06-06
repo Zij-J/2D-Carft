@@ -12,9 +12,10 @@
 #define DEFULT_ARRAY_SIZE 2 // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72 // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
-#define CAMERA_MOVE_SPEED WINDOW_WIDTH/100 // 相機移動速度 
+#define CAMERA_MOVE_SPEED WINDOW_WIDTH/50 // 相機移動速度 
 enum searchWord_colorData {searchWord_red = 255, searchWord_blue = 255, searchWord_green = 255}; // 大 
 
+#include <windows.h>
 // 記住的 renderer、文字 Font
 SDL_Renderer *renderer;
 TTF_Font *font;
@@ -100,7 +101,6 @@ public void Render_RenderMap()
                 SDL_Rect rect = (SDL_Rect) {.x = nowBlockPos.x - cameraPosition.x, .y = -(nowBlockPos.y - cameraPosition.y), .w = blockSize.width, .h = blockSize.height};
                 SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
             }
-            
             nowBlockPos.x += blockSize.width;
         }
         nowBlockPos.y -= blockSize.height;     
