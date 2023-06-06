@@ -197,6 +197,26 @@ SDL_Texture *TextureBase_GetTextureName(storedBlock_DataBase storedBlock_ArrayRe
     return NULL;
 } 
 
+// 依編號取得圖片
+SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
+{
+    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    {
+        if (storedBlock_ArrayRecord->array[i].blockID == blockID)
+            return storedBlock_ArrayRecord->array[i].blockTexture;
+    }
+    
+    blockBase_Data* current = storedBlock_ArrayRecord->head;
+    while (current != NULL)
+    {
+        if (current->blockID == blockID)
+            return current->blockTexture;
+        current = current->next;
+    }
+    
+    return NULL;
+}
+
 //刪除指定圖片
 void TextureBase_DeleteTexture(storedBlock_DataBase storedBlock_ArrayRecord, const char* textureName)
 {
