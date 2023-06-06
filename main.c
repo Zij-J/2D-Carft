@@ -10,7 +10,7 @@
 // 背包的search、sort、方塊部分測試開關，完成code後，改成1就可以開啟
 #define TESTING_BACKPACK_FUNCTIONS 0
 // 地圖移動測試開關，完成code後，改成1就可以開啟
-#define TESTING_MAP_FUNCTIONS 0
+#define TESTING_MAP_FUNCTIONS 1
 
 
 // main函式
@@ -24,7 +24,7 @@ int main(void)
     // 資料庫初始化
     // TextureBase_Init();
     // HotBar_Init();
-    // Map_Init();
+    Map_Init();
     SearchWords_Init();
     // 讓 render source file 記住 renderer，就不用每次 render 都要傳入
     Render_RememberRenderer(renderer);
@@ -92,16 +92,19 @@ int main(void)
             // 有輸入、再執行移動地圖部分
             if(Map_isInput(event) == true)
             {
-                // Map_EditBlock(event); // 依輸入放置、刪除方塊
-                // Render_MoveCamera(); // 依輸入移動 camera
-                // Map_UpdateMaps(); // 依移動結果更新地圖
+                Map_EditBlock(event); // 依輸入放置、刪除方塊
+                Render_MoveCamera(event); // 依輸入移動 camera
+                Map_UpdateMaps(); // 依移動結果更新地圖
             }
             #endif
+            // 依輸入移動 cursor (因為是滑鼠移動就要更新，所以在 isInput 外)
+            Map_MoveCursor(event); 
 
             // 畫出地圖、地圖cursor
-            //Render_RenderMap();
+            Render_RenderMap();
             //Render_RenderMapCursor();
         }
+        
 
         // 移動、顯示快捷欄
         // HotBar_MoveCursor();
@@ -114,7 +117,7 @@ int main(void)
 
     // 結束程式
     SearchWords_Clear();
-    // Map_Clear();
+    Map_Clear();
     // HotBar_Clear();
     // TextureBase_Clear();
     SDL_EndAll_StopProgram();
