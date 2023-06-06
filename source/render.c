@@ -12,7 +12,7 @@
 #define DEFULT_ARRAY_SIZE 2 // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72 // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
-#define CAMERA_MOVE_SPEED 1 // 相機移動速度 
+#define CAMERA_MOVE_SPEED WINDOW_WIDTH/100 // 相機移動速度 
 enum searchWord_colorData {searchWord_red = 255, searchWord_blue = 255, searchWord_green = 255}; // 大 
 
 // 記住的 renderer、文字 Font
@@ -87,6 +87,7 @@ public void Render_RenderMap()
     // SDL_Texture *blockTexture = TetxureBase_GetTexture();
     SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Grass_Block.png");
 
+    // 顯示
     SDL_position nowBlockPos = startBlockPos;
     for(int y = 0; y < totalBlockNumInWindow.height; ++y)
     {
@@ -95,7 +96,8 @@ public void Render_RenderMap()
         {
             if(renderingMap[y][x] != NO_BLOCK_ID)
             {
-                SDL_Rect rect = (SDL_Rect) {.x = nowBlockPos.x - cameraPosition.x, .y = cameraPosition.y - nowBlockPos.y, .w = blockSize.width, .h = blockSize.height};
+                // 算座標 (因實際顯示往下才是 +y ，所以要算完相對 y 座標後加負號)、顯示
+                SDL_Rect rect = (SDL_Rect) {.x = nowBlockPos.x - cameraPosition.x, .y = -(nowBlockPos.y - cameraPosition.y), .w = blockSize.width, .h = blockSize.height};
                 SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
             }
             
@@ -433,10 +435,8 @@ public void Render_MoveCamera(SDL_Event event)
     }
 }
 
-// 取得相機絕對位置(有換成/ BLOCK_WIDTH的座標，以方塊為單位)
+// 取得相機絕對位置
 public SDL_position Render_GetCameraPosition()
 {
-    SDL_size blockSize= Map_GetBlockSize();
-    SDL_position cameraBlockPos = (SDL_position){.x = cameraPosition.x /blockSize.width, .y = cameraPosition.y /blockSize.height};
-    return cameraBlockPos;
+    return cameraPosition;
 }

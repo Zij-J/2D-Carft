@@ -18,12 +18,13 @@ struct pressMouseRecord
 
 SDL_position arr_xy[4]; //big_arr_abs_pos (以方塊為單位)
 SDL_position cursor_xy; //cursor_abs_pos
-FILE *fp[4] = {NULL}; // 要初始化！
+FILE *fp[4];
 short map[4][ARRAY_MAP_WIDTH][ARRAY_MAP_WIDTH]; //4 big array
 int arr_relative_pos[4]; //[0]: UpLeft, [1]: UpRight, [2]: DownLeft, [3]: DownRight, n: map[n]
 
 // private 的 prototype 放這裡，一樣只是讓 .h 變簡潔！(畢竟 header file 的目的就是給其他 .c 用的 「介面」，介面愈簡單愈好)
-private void Map_Finput(FILE *fp, int n, int x, int y);
+private SDL_position Map_ChangePosToBlockPos(SDL_position originaPos);
+private void Map_Finput(int n, int x, int y);
 private void Map_Foutput(FILE *fp, int n, char* FileName);
 private void swap(int* a, int* b); // 只有 map.h 會用？所以改成private
 private int Map_GetNumRelative(SDL_position pos);
@@ -33,10 +34,10 @@ private char* file_name(int x, int y);
 public void Map_Init()
 {
     //file input map // 因 file_name 用絕對座標，看來 Map_Finput 也是傳絕對座標！
-    Map_Finput(fp[0], 0, 0, 0); 
-    Map_Finput(fp[1], 1, 0, ARRAY_MAP_WIDTH); 
-    Map_Finput(fp[2], 2, -ARRAY_MAP_WIDTH, 0);
-    Map_Finput(fp[3], 3, -ARRAY_MAP_WIDTH, ARRAY_MAP_WIDTH);
+    Map_Finput(0, 0, 0); 
+    Map_Finput(1, 0, ARRAY_MAP_WIDTH); 
+    Map_Finput(2, -ARRAY_MAP_WIDTH, 0);
+    Map_Finput(3, -ARRAY_MAP_WIDTH, ARRAY_MAP_WIDTH);
     //set 4 array relative position
     arr_relative_pos[0]=3;
     arr_relative_pos[1]=1;
@@ -45,16 +46,17 @@ public void Map_Init()
 }
 
 //map file input (fp[n], n, file_map_x, file_map_x)
-private void Map_Finput(FILE *fp, int n, int x, int y){
-    //open file + save array absolute position
-    fp = fopen(file_name(x,y), "r");
-    if(fp==NULL) fp = fopen(file_name(x,y), "w+");
+private void Map_Finput(int n, int x, int y){
+    printf("in:");
+    //open file + save array absolute position (用全域變數存！)
+    fp[n] = fopen(file_name(x,y), "r");
+    if(fp[n]==NULL) fp[n] = fopen(file_name(x,y), "w+"); // 如果打不開，fopen 會回傳 null，代表要創新檔案
     arr_xy[n].x= x; // 因為傳絕對座標了，所以直接存
     arr_xy[n].y= y; // 因為傳絕對座標了，所以直接存
     //read file + save in array
-    fseek(fp, 0, SEEK_SET);
+    fseek(fp[n], 0, SEEK_SET);
     int a;
-    if(fscanf(fp,"%d",&a)==EOF){//if nothing in file
+    if(fscanf(fp[n],"%d",&a)==EOF){//if nothing in file
         for(int i=0; i<ARRAY_MAP_WIDTH; i++){
             for(int j=0; j<ARRAY_MAP_WIDTH; j++){
                 map[n][i][j]=NO_BLOCK_ID; //no block = -9
@@ -65,12 +67,13 @@ private void Map_Finput(FILE *fp, int n, int x, int y){
                 map[n][TOTAL_BLOCK_NUMBER_IN_HEIGHT-1 -1][j]=/*GRASS_NUM*/1; // 地板比畫面最下面高一格，個人覺得比較好看！
     }
     else{//if file exist before
-        fseek(fp, 0, SEEK_SET);
+        fseek(fp[n], 0, SEEK_SET);
         for(int i=0; i<ARRAY_MAP_WIDTH; i++){
             for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-                fscanf(fp, "%d", &map[n][i][j]);
+                fscanf(fp[n], "%d", &map[n][i][j]);
         }
     }
+    printf(" in OK\n");
 }
 
 //return "map/map_x_y.txt" // 我把地圖放到 map 資料夾了！用 "map/map_x_y.txt" 可在 map 資料夾下創地圖
@@ -107,7 +110,7 @@ private char* file_name(int x, int y){
         strcat(name, tmp);
     }
     strcat(name, ".txt");
-    //printf("%s\n", name);
+    printf("%s\n", name);
     return &name[0];
 }
 
@@ -121,6 +124,7 @@ public void Map_Clear()
 
 //map file output (fp[n], n, file_name)
 private void Map_Foutput(FILE *fp, int n, char* FileName){
+    printf("(out)\n");
     fp = fopen(FileName, "w+"); //clear file
     fseek(fp, 0, SEEK_SET);
     for(int i=0; i<ARRAY_MAP_WIDTH; i++){
@@ -165,17 +169,27 @@ public void Map_EditBlock(SDL_Event event)
     // short NowChoseBlockID = HotBar_GetChosenBlockID();
 
     //check position
-    SDL_position cameraPos = Render_GetCameraPosition();
-    int num_relative = Map_GetNumRelative(cameraPos);
-
-    //if mouse clicked
-    SDL_position cur = cursor_xy; // 用 cursor_xy 就好！我忘記移動與放置是分開的！所以做此改動
+    SDL_position cur = cursor_xy; // 用 cursor_xy 就好(已含 camera 位置，是cursor的絕對位置)！我忘記移動與放置是分開的！所以做此改動
+    int num_relative = Map_GetNumRelative(cur);
+    //place block
     if (pressMouseRecord.isPressed){
         if(pressMouseRecord.buttonType==SDL_BUTTON_LEFT) //put down block
             map[num_relative][ arr_xy[num_relative].y-cur.y ][ cur.x-arr_xy[num_relative].x ]=/*GET_HOTBAR_BLOCK_NUMBER*/0; // 最高在上，cursor只會往下，所以要大減小：arr_xy[num_relative].y-cur.y
         else if(pressMouseRecord.buttonType==SDL_BUTTON_RIGHT) //del block
             map[num_relative][ arr_xy[num_relative].y-cur.y ][ cur.x-arr_xy[num_relative].x ]=NO_BLOCK_ID; //no block = -9
     }
+}
+
+// 取得 /BLOCK_WIDTH 後的左上角 position
+private SDL_position Map_ChangePosToBlockPos(SDL_position originPos)
+{
+    // /BLOCK_WIDTH 後不一定是左上角座標(在x正y負時才是)，所以須依不同正負調整 // 先加再除，避免 0.幾 的訊息都變成0，就看不出正負
+    if(originPos.x < 0) // x負，除下去會變成右，要減，變左
+        originPos.x -= BLOCK_WIDTH;
+    if(originPos.y > 0) // y正，除下去會變成下，要加，變上
+        originPos.y += BLOCK_WIDTH;
+
+    return (SDL_position){.x = originPos.x / BLOCK_WIDTH, .y = originPos.y / BLOCK_WIDTH};
 }
 
 // 取得在大陣列的區域編號
@@ -197,16 +211,14 @@ private int Map_GetNumRelative(SDL_position pos)
 public void Map_UpdateMaps()
 {
     //get camera_position
-    SDL_position cam = Render_GetCameraPosition();
+    SDL_position cam =  Map_ChangePosToBlockPos(Render_GetCameraPosition());
     
     //if it exceed 4 map range
     if(cam.x < arr_xy[arr_relative_pos[0]].x){ //Left out of range
         Map_Foutput(fp[arr_relative_pos[1]], arr_relative_pos[1], file_name(arr_xy[arr_relative_pos[1]].x, arr_xy[arr_relative_pos[1]].y));
         Map_Foutput(fp[arr_relative_pos[3]], arr_relative_pos[3], file_name(arr_xy[arr_relative_pos[3]].x, arr_xy[arr_relative_pos[3]].y));
-        fp[arr_relative_pos[1]] = NULL; // 要換新的地圖，先清空舊的 fp
-        fp[arr_relative_pos[3]] = NULL;
-        Map_Finput(fp[arr_relative_pos[1]], arr_relative_pos[1], arr_xy[arr_relative_pos[1]].x-2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[1]].y);
-        Map_Finput(fp[arr_relative_pos[3]], arr_relative_pos[3], arr_xy[arr_relative_pos[3]].x-2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[3]].y);
+        Map_Finput(arr_relative_pos[1], arr_xy[arr_relative_pos[1]].x-2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[1]].y);
+        Map_Finput(arr_relative_pos[3], arr_xy[arr_relative_pos[3]].x-2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[3]].y);
         //change relation
         swap(&arr_relative_pos[0], &arr_relative_pos[1]);
         swap(&arr_relative_pos[2], &arr_relative_pos[3]);
@@ -214,10 +226,8 @@ public void Map_UpdateMaps()
     else if(cam.x > arr_xy[arr_relative_pos[1]].x+ARRAY_MAP_WIDTH-TOTAL_BLOCK_NUMBER_IN_WIDTH){ //Right out of range
         Map_Foutput(fp[arr_relative_pos[0]], arr_relative_pos[0], file_name(arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y));
         Map_Foutput(fp[arr_relative_pos[2]], arr_relative_pos[2], file_name(arr_xy[arr_relative_pos[2]].x, arr_xy[arr_relative_pos[2]].y));
-        fp[arr_relative_pos[0]] = NULL; // 要換新的地圖，先清空舊的 fp
-        fp[arr_relative_pos[2]] = NULL;
-        Map_Finput(fp[arr_relative_pos[0]], arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x+2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[0]].y);
-        Map_Finput(fp[arr_relative_pos[2]], arr_relative_pos[2], arr_xy[arr_relative_pos[2]].x+2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[2]].y);
+        Map_Finput(arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x+2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[0]].y);
+        Map_Finput(arr_relative_pos[2], arr_xy[arr_relative_pos[2]].x+2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[2]].y);
         //change relation
         swap(&arr_relative_pos[0], &arr_relative_pos[1]);
         swap(&arr_relative_pos[2], &arr_relative_pos[3]);
@@ -225,10 +235,8 @@ public void Map_UpdateMaps()
     else if(cam.y > arr_xy[arr_relative_pos[0]].y){ //Up out of range
         Map_Foutput(fp[arr_relative_pos[2]], arr_relative_pos[2], file_name(arr_xy[arr_relative_pos[2]].x, arr_xy[arr_relative_pos[2]].y));
         Map_Foutput(fp[arr_relative_pos[3]], arr_relative_pos[3], file_name(arr_xy[arr_relative_pos[3]].x, arr_xy[arr_relative_pos[3]].y));
-        fp[arr_relative_pos[2]] = NULL; // 要換新的地圖，先清空舊的 fp
-        fp[arr_relative_pos[3]] = NULL;
-        Map_Finput(fp[arr_relative_pos[2]], arr_relative_pos[2], arr_xy[arr_relative_pos[2]].x, arr_xy[arr_relative_pos[2]].y+2*ARRAY_MAP_WIDTH);
-        Map_Finput(fp[arr_relative_pos[3]], arr_relative_pos[3], arr_xy[arr_relative_pos[3]].x, arr_xy[arr_relative_pos[3]].y+2*ARRAY_MAP_WIDTH);
+        Map_Finput(arr_relative_pos[2], arr_xy[arr_relative_pos[2]].x, arr_xy[arr_relative_pos[2]].y+2*ARRAY_MAP_WIDTH);
+        Map_Finput(arr_relative_pos[3], arr_xy[arr_relative_pos[3]].x, arr_xy[arr_relative_pos[3]].y+2*ARRAY_MAP_WIDTH);
         //change relation
         swap(&arr_relative_pos[0], &arr_relative_pos[2]);
         swap(&arr_relative_pos[1], &arr_relative_pos[3]);
@@ -236,10 +244,8 @@ public void Map_UpdateMaps()
     else if(cam.y < arr_xy[arr_relative_pos[2]].y-ARRAY_MAP_WIDTH+TOTAL_BLOCK_NUMBER_IN_HEIGHT){ //Down out of range 
         Map_Foutput(fp[arr_relative_pos[0]], arr_relative_pos[0], file_name(arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y));
         Map_Foutput(fp[arr_relative_pos[1]], arr_relative_pos[1], file_name(arr_xy[arr_relative_pos[1]].x, arr_xy[arr_relative_pos[1]].y));
-        fp[arr_relative_pos[0]] = NULL; // 要換新的地圖，先清空舊的 fp
-        fp[arr_relative_pos[1]] = NULL;
-        Map_Finput(fp[arr_relative_pos[0]], arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y-2*ARRAY_MAP_WIDTH);
-        Map_Finput(fp[arr_relative_pos[1]], arr_relative_pos[1], arr_xy[arr_relative_pos[1]].x, arr_xy[arr_relative_pos[1]].y-2*ARRAY_MAP_WIDTH);
+        Map_Finput(arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y-2*ARRAY_MAP_WIDTH);
+        Map_Finput(arr_relative_pos[1], arr_xy[arr_relative_pos[1]].x, arr_xy[arr_relative_pos[1]].y-2*ARRAY_MAP_WIDTH);
         swap(&arr_relative_pos[0], &arr_relative_pos[2]);
         swap(&arr_relative_pos[1], &arr_relative_pos[3]);
     }
@@ -257,8 +263,9 @@ public void Map_MoveCursor(SDL_Event event){
     if(event.type == SDL_MOUSEMOTION || event.type == SDL_KEYDOWN){ // 因為移 camera 也要更新 cursor 位置，加了SDL_KEYDOWN
         SDL_position camera_xy = Render_GetCameraPosition();
         SDL_GetMouseState(&(cursor_xy.x), &(cursor_xy.y));
-        cursor_xy.x= camera_xy.x + cursor_xy.x/BLOCK_WIDTH; // 讀現有的 camera_xy 就好！ (/BLOCK_WIDTH 要變成以 方塊 為單位)
-        cursor_xy.y= camera_xy.y + (-cursor_xy.y)/BLOCK_WIDTH; // 原本以下為正，要相反！
+        cursor_xy.x= (camera_xy.x + cursor_xy.x); // 讀現有的 camera_xy 就好！
+        cursor_xy.y= (camera_xy.y -cursor_xy.y); // 原本以下為正，要相反！
+        cursor_xy = Map_ChangePosToBlockPos(cursor_xy); // 最後變回 /BLOCK_WIDTH 座標
     }
 }
 
@@ -274,7 +281,7 @@ public void Map_GetShowedMapData(short ***mapInWindow, SDL_size *totalBlockNumbe
     }
     
     // 取地圖
-    SDL_position startBlockPosition = Render_GetCameraPosition();
+    SDL_position startBlockPosition =  Map_ChangePosToBlockPos(Render_GetCameraPosition());
     SDL_position nowBlockPosition = startBlockPosition;
     for(int y = 0; y < TOTAL_BLOCK_NUMBER_IN_HEIGHT +1; ++y) // 需多顯示一個，避免cmaera在中間
     {
@@ -283,7 +290,7 @@ public void Map_GetShowedMapData(short ***mapInWindow, SDL_size *totalBlockNumbe
         {
             // 取得當下座標的編號、存入回傳的地圖
             int num_relative = Map_GetNumRelative(nowBlockPosition);
-            (*mapInWindow)[y][x] = map[num_relative][ arr_xy[num_relative].y-nowBlockPosition.y ][ nowBlockPosition.x-arr_xy[num_relative].x ];
+            (*mapInWindow)[y][x] = map[num_relative][ arr_xy[num_relative].y - nowBlockPosition.y ][ nowBlockPosition.x - arr_xy[num_relative].x ];
             // 往右到下一 column
             nowBlockPosition.x += 1;
         }
@@ -296,10 +303,11 @@ public void Map_GetShowedMapData(short ***mapInWindow, SDL_size *totalBlockNumbe
 }
 
 
-// 這是取得大陣列最左上角的絕對座標(有)用的！ (原本的移動改到 render 的 Render_MoveCamera())
+// 這是取得要顯示大陣列最左上角的絕對座標用的！ (原本的移動改到 render 的 Render_MoveCamera())
 public SDL_position Map_GetUpLeftCornerPosition(){
-    SDL_position camera_xy = Render_GetCameraPosition();
-    return arr_xy[Map_GetNumRelative(camera_xy)];
+    SDL_position camera_xy =  Map_ChangePosToBlockPos(Render_GetCameraPosition());
+    SDL_position return_xy = (SDL_position){.x = camera_xy.x, camera_xy.y}; // 就是 get camera 所在方塊的左上角座標
+    return return_xy;
 }
 
 // 這是取得 cursor 絕對位置用的！ (原本的移動改到 Map_MoveCursor())
