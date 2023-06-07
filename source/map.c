@@ -9,7 +9,7 @@
 #define BLOCK_WIDTH (WINDOW_WIDTH / TOTAL_BLOCK_NUMBER_IN_WIDTH) // 用寬能放幾個推算方塊的邊長
 #define ARRAY_MAP_WIDTH 30
 
-// 用此紀錄是否有按滑鼠、按了左還是右
+// 用此紀錄是否有按滑鼠、按了左還是右 + 是否一直按著
 struct pressMouseRecord
 {
     bool isPressed;
@@ -131,39 +131,35 @@ private void Map_Foutput(FILE *fp, int n, char* FileName){
     fclose(fp);
 }
 
-// 是否有移動，移動才進行其他步驟 //not need now //merge in Map_EditBlock() // 有了會更快！所以想留
-public bool Map_isInput(SDL_Event event)
-{
-    // 有按著滑鼠，就會一直執行！
-    if(pressMouseRecord.isPressed == true)
-    {
-        if(event.type == SDL_MOUSEBUTTONUP)
-        {
-            pressMouseRecord.isPressed = false;
-            return false;
-        }
-        else
-            return true;
-    }
-
-    // 沒按著滑鼠，偵測其他按鍵
-    if(event.type == SDL_MOUSEBUTTONDOWN){
-        pressMouseRecord.isPressed = true;
-        pressMouseRecord.buttonType = event.button.button; // 之後一直按著時不會幫忙記是按住左還是右鍵，要自己記
-        return true;
-    }
-    if (event.type == SDL_KEYDOWN){ // press key
-        return true;
-    }
-    return false;
-}
+// 是否有移動，移動才進行其他步驟 //not need now //merge in Map_EditBlock()
+// public bool Map_isInput(SDL_Event event)
+// {
+    
+// }
 
 // 依輸入放置、刪除方塊
 public void Map_EditBlock(SDL_Event event)
 {
+    // 偵測輸入
+    if(pressMouseRecord.isPressed == true && event.type == SDL_MOUSEBUTTONUP) // 有按著滑鼠，放開就不執行
+    {
+        pressMouseRecord.isPressed = false;
+        return ;
+    }
+    if(pressMouseRecord.isPressed == false) // 沒按著滑鼠 + 沒開始按，就不執行
+    {
+        if(event.type == SDL_MOUSEBUTTONDOWN)
+        {
+            pressMouseRecord.isPressed = true;
+            pressMouseRecord.buttonType = event.button.button; // 之後一直按著時不會幫忙記是按住左還是右鍵，要自己記
+        }
+        else
+            return ;  
+    }
+
     // 要取得目前快捷欄選取的方塊編號
     // short NowChoseBlockID = HotBar_GetChosenBlockID();
-
+    
     //check position
     SDL_position cur = cursor_xy; // 用 cursor_xy 就好(已含 camera 位置，是cursor的絕對位置)！我忘記移動與放置是分開的！所以做此改動
     int num_relative = Map_GetNumRelative(cur);
@@ -203,7 +199,7 @@ private int Map_GetNumRelative(SDL_position pos)
     return arr_relative_pos[num_relative]; // 取得區域編號(對應位置)，要取到區域本身，才會改到區域本身！
 }
 
-// file I/O map if camera is out of range
+// file I/O map if camera is out of range // 多偵測四次比傳來傳去讓程式更複雜好
 public void Map_UpdateMaps()
 {
     //get camera_position
@@ -254,15 +250,13 @@ private void swap(int* a, int* b){
     *b=tmp;
 }
 
-// 移動滑鼠 or 按下按鈕(移動camera)時，更新 cursor 位置
+// 移動滑鼠 or 按下按鈕(移動camera)時，更新 cursor 位置 // 因加速度的相機，所以完全不按也會移動，因此要不斷更新 cursor 位置
 public void Map_MoveCursor(SDL_Event event){  
-    if(event.type == SDL_MOUSEMOTION || event.type == SDL_KEYDOWN){ // 因為移 camera 也要更新 cursor 位置，加了SDL_KEYDOWN
-        SDL_position camera_xy = Render_GetCameraPosition();
-        SDL_GetMouseState(&(cursor_xy.x), &(cursor_xy.y));
-        cursor_xy.x= (camera_xy.x + cursor_xy.x); // 讀現有的 camera_xy 就好！
-        cursor_xy.y= (camera_xy.y -cursor_xy.y); // 原本以下為正，要相反！
-        cursor_xy = Map_ChangePosToBlockPos(cursor_xy); // 最後變回 /BLOCK_WIDTH 座標
-    }
+    SDL_position camera_xy = Render_GetCameraPosition();
+    SDL_GetMouseState(&(cursor_xy.x), &(cursor_xy.y));
+    cursor_xy.x= (camera_xy.x + cursor_xy.x); // 讀現有的 camera_xy 就好！
+    cursor_xy.y= (camera_xy.y -cursor_xy.y); // 原本以下為正，要相反！
+    cursor_xy = Map_ChangePosToBlockPos(cursor_xy); // 最後變回 /BLOCK_WIDTH 座標
 }
 
 // 取得要顯示的畫面部分地圖 (需準備buffer存)

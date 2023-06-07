@@ -90,15 +90,12 @@ int main(void)
         else
         {
             #if TESTING_MAP_FUNCTIONS
-            // 有輸入、再執行移動地圖部分
-            if(Map_isInput(event) == true)
-            {
-                Map_EditBlock(event); // 依輸入放置、刪除方塊
-                Render_MoveCamera(event); // 依輸入移動 camera
-                Map_UpdateMaps(); // 依移動結果更新地圖
-            }
+            // 編輯、移動地圖部分
+            Map_EditBlock(event); // 依輸入放置、刪除方塊
+            Render_MoveCamera(event); // 依輸入移動 camera
+            Map_UpdateMaps(); // 依移動結果更新地圖
             #endif
-            // 依輸入移動 cursor (因為是滑鼠移動就要更新，所以在 isInput 外)
+            // 依輸入移動 cursor 不斷更新 cursor 位置
             Map_MoveCursor(event); 
 
             // 畫出地圖、地圖cursor
