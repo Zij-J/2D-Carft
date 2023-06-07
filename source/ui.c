@@ -88,7 +88,7 @@ public void Backpack_MoveCursor(SDL_Event event)
 }
 
 // 把背包選到的方塊更新到選到的 Hotbar 上
-void Backpack_UpdateBlockToHotbar()
+void Backpack_UpdateBlockToHotbar(SDL_Event event)
 {
     //因為看起來你要用拖曳的，所以：
     //if 鼠標在方塊位置&選取
