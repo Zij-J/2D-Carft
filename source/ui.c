@@ -30,12 +30,12 @@ typedef struct node_Hotbar node_Hotbar;
 // 初始化快捷欄
 public void HotBar_Init()
 {
-    // 需匯入材質(背包)資料庫的編號??
+    // 需匯入材質(背包)資料庫的編號?? Ans: 設定遊戲一開始預設在快捷欄的方塊用，所以如果預設是空白就不用
     // int *textureIDs = TextureBase_GetAllID();
 
     root = malloc(sizeof(node_Hotbar));
     root->num_of_Hotbar=1;
-    //設*next (?)
+    //設*next (?) Ans: 對！
     //for
         //malloc新的node + 連到上個node的*next + 設定num_of_Hotbar
     //最後一個node的*next要接到root
@@ -43,7 +43,7 @@ public void HotBar_Init()
 
 void HotBar_Clear()
 {
-    //?
+    //? Ans: free linked list用
 }
 
 void HotBar_MoveCursor(SDL_Event event)
@@ -54,7 +54,7 @@ void HotBar_MoveCursor(SDL_Event event)
 
 void HotBar_GetAllID()
 {
-    //for//取node的ID ???
+    //for//取node的ID ??? Ans: 把所有 node 存的 BlockID 回傳，用於一次顯示所有 Hotbar 有的方塊
 
 }
 
@@ -113,7 +113,7 @@ bool Backpack_isInput(SDL_Event event)
 
 SDL_position Hotbar_GetPosition()
 {
-    //get hotbar左上角座標 ?
+    //get hotbar左上角座標 ? Ans: 對！要知道 Hotbar 要放在整個畫面的哪裡！所以要回傳在畫面上的絕對座標 (一樣是 左上 (0,0) 右x正 下y正)
 }
 
 SDL_position Hotbar_GetCursorPosition()
