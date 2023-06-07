@@ -11,11 +11,12 @@ void Map_UpdateMaps();
 void Map_MoveCursor(SDL_Event event);
 void Map_EditBlock(SDL_Event event);//need to get Hotbar current block number + camera Position
 void Map_GetShowedMapData(short ***mapInWindow, SDL_size *totalBlockNumberInWindow);
-bool Map_isInput(SDL_Event event); //not need now //merge in Map_EditBlock() // 還是要一下！不然要多每個迴圈都要多判斷不少東西
 SDL_position Map_GetUpLeftCornerPosition();
 SDL_position Map_GetCursorPosition();
 SDL_size Map_GetBlockSize();
 SDL_size Map_GetCursorSize();
 
+// unused
+// bool Map_isInput(SDL_Event event); //not need now //merge in Map_EditBlock()
 
 #endif

@@ -4,6 +4,8 @@
 
 // GetCursorOnArea用，也就是溝通 Cursor 在方塊區、還是在搜尋區
 typedef enum {blockArea, searchArea, nothingArea} cursorArea;
+// searchNotify用，代表成功失敗的 index 
+enum searchNotifyIndex{searchNotifyIndex_success, searchNotifyIndex_failure};
 
 // unfinished
 void HotBar_Init();
@@ -20,17 +22,22 @@ SDL_position Hotbar_GetCursorPosition();
 SDL_position Backpack_GetPosition();
 SDL_position Backpack_GetBlockStartPosition();
 SDL_position Backpack_GetCursorPosition();
-SDL_position Backpack_GetSearchWordPosition(); // 做完需要改 Render_RenderSearchWords()
 SDL_size Hotbar_GetSize();
 SDL_size HotBar_GetCursorSize();
 SDL_size Backpack_GetSize();
 SDL_size Backpack_GetBlockSize();
 SDL_size Backpack_GetCursorSize();
-SDL_size Backpack_GetSearchWordSize(); // 做完需要改 Render_RenderSearchWords()
 cursorArea Backpack_GetCursorOnArea();
 
 // finished
 void Backpack_Switch(SDL_Event event);
 bool Backpack_isOpen();
+SDL_position Backpack_GetSearchWordPosition();
+SDL_size Backpack_GetSearchWordSize();
+SDL_Color Backpack_GetSearchWordColor();
+SDL_position Backpack_GetSearchNotifyPosition();
+SDL_size Backpack_GetSearchNotifySize();
+void Backpack_GetSearchNotifyColor(SDL_Color *array);
+void Backpack_GetSearchNotifyContent(char **array);
 
 #endif

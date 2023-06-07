@@ -13,6 +13,9 @@
 #define private static
 #define public
 
+// debug用 (第一個是要 print 的東西，第二個是 "%d" 之類的)
+#define DEBUG_PRINT(n, conversionSpceifier) fprintf(stderr, #n ": " conversionSpceifier "\n", n);SDL_Delay(1000);
+
 // windows大小 + 名字
 #define WINDOWS_NAME "2D-Craft"
 enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
