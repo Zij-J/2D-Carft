@@ -1,6 +1,7 @@
 /* 材質(背包)資料庫(紅黑樹？)、Sort、Search 與 相關function (file I/O：編號對應材質名 file、圖片資料夾)*/
 #include "../include/basicSetting.h" // 要用的
 #include "../include/texture.h" // 要放的
+#include "../include/RBTree.h"
 #include <string.h>
 #include <dirent.h>
 #include <io.h>
@@ -345,22 +346,7 @@ short TextureBase_GetSearchedBlockID(storedBlock_DataBase* IDtoNameBase, char* t
     return -1;
 }
 
-//依照方塊編號大小排序資料庫
-SDL_Texture *TextureBase_GetTextureID(storedBlock_DataBase* IDtoNameBase)
-{
-    // Sort the array by blockID in ascending order using bubble sort
-    for (int i = 0; i < (*IDtoNameBase)->storedSize - 1; ++i)
-    {
-        for (int j = 0; j < (*IDtoNameBase)->storedSize - i - 1; ++j)
-        {
-            if ((*IDtoNameBase)->array[j].blockID > (*IDtoNameBase)->array[j + 1].blockID)
-            {
-                // Swap the elements
-                blockBase_Data temp = (*IDtoNameBase)->array[j];
-                (*IDtoNameBase)->array[j] = (*IDtoNameBase)->array[j + 1];
-                (*IDtoNameBase)->array[j + 1] = temp;
-            }
-        }
-    }
+//依照方塊編號大小排序資料庫(使用RBTree)
+SDL_Texture* TextureBase_GetTextureID(storedBlock_DataBase* IDtoNameBase) {
+    sortArray(IDtoNameBase);    
 }
-
