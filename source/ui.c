@@ -8,13 +8,17 @@
 #define BACKPACK_SIZE (SDL_size){.height = 100, .width = 100} // 背包的預設大小
 #define SEARCH_WORD_POSITION (SDL_position){.x = 100, .y = 100} // 搜尋文字的預設位置
 #define SEARCH_WORD_SIZE (SDL_size){.height = 100, .width = 100} // 搜尋文字。一個字的預設大小(方形)
-#define SEARCH_WORD_COLOR (SDL_Color){.r = 255, .g = 255, .b = 255} // 搜尋文字的預設顏色
+#define SEARCH_WORD_COLOR (SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255} // 搜尋文字的預設顏色
 #define SEARCH_NOTIFY_POSITION (SDL_position){.x = 100, .y = 100} // 提醒文字的預設位置
 #define SEARCH_NOTIFY_SIZE (SDL_size){.height = 25, .width = 25} // 提醒文字。一個字的預設大小(方形)
-#define SEARCH_NOTIFY_SUCCESS_COLOR (SDL_Color){.r = 51, .g = 255, .b = 51} // 提醒文字(成功)的預設顏色
-#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 51, .b = 51} // 提醒文字(失敗)的預設顏色
+#define SEARCH_NOTIFY_SUCCESS_COLOR (SDL_Color){.r = 51, .g = 255, .b = 51, .a = 255} // 提醒文字(成功)的預設顏色
+#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 51, .b = 51, .a = 255} // 提醒文字(失敗)的預設顏色
 #define SEARCH_NOTIFY_SUCCESS_WORD "Tha Block is here!" // 提醒文字(成功)的內容
 #define SEARCH_NOTIFY_FAILURE_WORD "no Block named as this!" // 提醒文字(失敗)的內容
+#define PAUSE_WORD_SIZE (SDL_size){.height = 100, .width = 100} // 暫停文字的大小 (位置是置中，所以不給調)
+#define PAUSE_WORD_COLOR (SDL_Color){.r = 175, .g = 175, .b = 175, .a = 255} // 暫停文字的預設顏色
+#define PAUSE_WORD "PAUSED" // 暫停文字的內容
+#define PAUSE_BACKGROUND_COLOR (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 100} // 暫停時背景顏色
 
 private bool backpack_isOn = false; // 背包是否開啟
 
@@ -111,4 +115,26 @@ void Backpack_GetSearchNotifyContent(char **array)
 {
     array[searchNotifyIndex_success] = SEARCH_NOTIFY_SUCCESS_WORD;
     array[searchNotifyIndex_failure] = SEARCH_NOTIFY_FAILURE_WORD;
+}
+
+
+// 回傳 Pause 文字大小
+SDL_size PauseScreen_GetPauseWordSize()
+{
+    return PAUSE_WORD_SIZE;
+}
+// 回傳 Pause 文字顏色
+SDL_Color PauseScreen_GetPauseWordColor()
+{
+    return PAUSE_WORD_COLOR;
+}
+// 回傳 Pause 文字本身
+char *PauseScreen_GetPauseWordContent()
+{
+    return PAUSE_WORD;
+}
+// 回傳 Pause 背景顏色
+SDL_Color PauseScreen_GetPauseBackgroundColor()
+{
+    return PAUSE_BACKGROUND_COLOR;
 }
