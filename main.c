@@ -37,11 +37,18 @@ int main(void)
         // 按叉叉，結束
         if (event.type == SDL_QUIT)
             break;
+        // 按 esc，切換是否暫停 (在最後才暫停，確保暫停時所有畫面都被保留)
+        if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+            SDL_SwitchPause();
+    
+        // 暫停中，不執行以下功能
+        if(SDL_GetPauseBool() == true)
+            continue;
         
         // 清除畫面 + 畫背景
         SDL_RenderClear(renderer);
         Render_RenderBackground();
-
+        
         // 開關背包
         Backpack_Switch(event);
 
@@ -90,7 +97,7 @@ int main(void)
             #if TESTING_MAP_FUNCTIONS
             // 編輯、移動地圖部分
             Map_EditBlock(event); // 依輸入放置、刪除方塊
-            Render_MoveCamera(event); // 依輸入移動 camera
+            Render_MoveCamera(); // 依輸入移動 camera
             Map_UpdateMaps(); // 依移動結果更新地圖
             #endif
             // 依輸入移動 cursor 不斷更新 cursor 位置

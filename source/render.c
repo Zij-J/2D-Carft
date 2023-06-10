@@ -24,10 +24,11 @@ enum searchWord_colorData
 };
 SDL_Renderer *renderer;
 
-// 記住的文字 Font、成功失敗文字、載入背景、之前的時間
+// 記住的文字 Font、成功失敗文字、暫停文字、載入背景、之前的時間
 TTF_Font *font;
 SDL_Texture *searchNotify_Texture[2]; // read [] and () before *，所以是放2個pointer的array
 SDL_Texture *background_texture;
+SDL_Texture *pauseWord_texture;
 int beforeTime = 0;
 
 // 相機、背景位置
@@ -54,9 +55,10 @@ struct cameraVelocityRecord cameraVelocityRecord = (struct cameraVelocityRecord)
 
 
 private char *GetAssetsInFolder(const char *folderName, const char *extensionName);
-private void Render_RenderBlockInBackpack(SDL_position nowPos, int blockID);
+private void Render_RenderWords(char *words, SDL_position leftUpPos, SDL_size charSize);
 private void SearchWords_Init();
 private void SearchWords_chaningPressingShift(char *inputChar, SDL_Event event);
+private SDL_Rect Render_GetWordsTotalRect(char *words, SDL_position leftUpPos, SDL_size charSize);
 
 
 // render 內部載入各種初始化用
@@ -65,8 +67,19 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
     // 讓 Render 記住 renderer，之後就不用傳入 renderer
     renderer = rememberedRenderer;
 
+    // 設定我要畫有透明度的東西
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
     // SearchWords 初始化
     SearchWords_Init();
+
+    // 暫停文字，預先 load 好
+    SDL_Color wordColor = PauseScreen_GetPauseWordColor(); // 取得文字顏色
+    char *wordsContent = PauseScreen_GetPauseWordContent(); // 取得文字
+    SDL_Surface *wordsSerface;
+    wordsSerface = TTF_RenderText_Solid(font, wordsContent, wordColor);
+    pauseWord_texture = SDL_CreateTextureFromSurface(renderer, wordsSerface); // serface 轉 texture
+    SDL_FreeSurface(wordsSerface);                                                  // serface 沒用了
 
     // 載入背景
     background_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("background", "png"));
@@ -124,7 +137,8 @@ public void Render_Clear()
     // SearchWords 結束
     SearchWords_Clear();
 
-    // free 背景圖
+    // free 暫停文字、背景圖
+    SDL_DestroyTexture(pauseWord_texture);
     SDL_DestroyTexture(background_texture);
 }
 
@@ -219,8 +233,7 @@ public void Render_RenderMap()
 }
 
 // 依 camera 差距，畫出背包的 cursor
-public
-void Render_RenderMapCursor()
+public void Render_RenderMapCursor()
 {
     // 取得 cursor 位置、大小
     // SDL_position cursorPos = Map_GetCursorPosition();
@@ -275,6 +288,47 @@ public void Render_RenderSearchWords()
         // 顯示此字
         SDL_RenderCopy(renderer, (*searchWords).wordsTexture[i], NULL, &wordRect);
     }
+}
+
+// 畫出暫停 mask 與 文字
+public void Render_RenderPauseStuff()
+{
+    // mask
+    SDL_Color maskColor = PauseScreen_GetPauseBackgroundColor();
+    SDL_SetRenderDrawColor(renderer, maskColor.r, maskColor.g, maskColor.b, maskColor.a); // 設定要畫的顏色
+    SDL_Rect rect = { .x = 0 , .y = 0, .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT }; // 要畫的方形大小 (整個window)
+    SDL_RenderFillRect(renderer, &rect); // 畫出來！ (FillRect會畫在最上方，符合所需)
+
+    // 文字位置、大小
+    SDL_position pos = {.x = 0, .y = 0}; 
+    SDL_size size = PauseScreen_GetPauseWordSize();
+    SDL_Rect wordRect = Render_GetWordsTotalRect(PauseScreen_GetPauseWordContent(), pos, size);
+    wordRect.x = WINDOW_WIDTH /2 - wordRect.w /2; // 置中
+    wordRect.y = WINDOW_HEIGHT /2 - wordRect.h /2; // 置中
+
+    // 顯示文字
+    SDL_RenderCopy(renderer, pauseWord_texture, NULL, &wordRect);
+    
+    // 全部疊在目前畫面上，顯示(暫停後跑不到顯示部分，需要自己顯示)
+    SDL_RenderPresent(renderer);
+}
+
+// 取得文字 rect 用
+private SDL_Rect Render_GetWordsTotalRect(char *words, SDL_position leftUpPos, SDL_size charSize)
+{
+    // 直接算文字總長度
+    SDL_size stringSize = charSize;
+    stringSize.width *= strlen(words);
+
+    // 取得字大小
+    SDL_size originSize;
+    TTF_SizeText(font, words, &originSize.width, &originSize.height); // 取得 font 原本大小
+    float widthScaling = (float)stringSize.height / (float)originSize.height;  // 換成 float ，處理縮放
+    stringSize.width = originSize.width * widthScaling;                      // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
+
+    // 大小，位置確定
+    SDL_Rect wordRect = {.x = leftUpPos.x, .y = leftUpPos.y, .w = stringSize.width, .h = stringSize.height};
+    return wordRect;
 }
 
 // 初始化，搜尋文字 Array
@@ -494,24 +548,15 @@ public void Render_RenderSearchNotify(bool isSuccessSearching)
     // 要顯示甚麼文字
     int shownNoticeIndex = isSuccessSearching ? searchNotifyIndex_success : searchNotifyIndex_failure;
 
-    // 直接算文字總長度
-    rectSize.width *= strlen(noticeContents[shownNoticeIndex]);
-
-    // 取得字大小
-    SDL_size originSize;
-    TTF_SizeText(font, noticeContents[shownNoticeIndex], &originSize.width, &originSize.height); // 取得 font 原本大小
-    float widthScaling = (float)rectSize.height / (float)originSize.height;                      // 換成 float ，處理縮放
-    rectSize.width = originSize.width * widthScaling;                                            // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
-
     // 大小，位置確定
-    SDL_Rect wordRect = {.x = rectPos.x, .y = rectPos.y, .w = rectSize.width, .h = rectSize.height};
+    SDL_Rect wordRect = Render_GetWordsTotalRect(noticeContents[shownNoticeIndex], rectPos, rectSize);
 
     // 顯示此段字
     SDL_RenderCopy(renderer, searchNotify_Texture[shownNoticeIndex], NULL, &wordRect);
 }
 
-// 移動相機
-public void Render_MoveCamera(SDL_Event event)
+// 移動相機 (會另外 get 鍵盤輸入)
+public void Render_MoveCamera()
 {
     // 偵測輸入 (偵測是否有按著鍵盤)
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
