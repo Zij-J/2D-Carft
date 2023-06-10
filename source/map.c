@@ -67,10 +67,7 @@ private void Map_Finput(int n, int x, int y){
     }
     else{//if file exist before
         fseek(fp[n], 0, SEEK_SET);
-        for(int i=0; i<ARRAY_MAP_WIDTH; i++){
-            for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-                fscanf(fp[n], "%hd ", &map[n][i][j]); // 一定要用 hd 去 read ，不知道為何不會強制轉型，導致程式直接結束，所以改正
-        }
+        fread(map[n], sizeof(short), ARRAY_MAP_WIDTH * ARRAY_MAP_WIDTH,fp[n]); // 因為記憶體都是連續的，所以給定位置，要輸入多少，就會全部輸入
     }
 }
 
@@ -107,7 +104,7 @@ private char* file_name(int x, int y){
         if(negative=='1') strcat(name, "-"); // y 也有負的！
         strcat(name, tmp);
     }
-    strcat(name, ".txt");
+    strcat(name, ".bin");
     return &name[0];
 }
 
@@ -123,11 +120,7 @@ public void Map_Clear()
 private void Map_Foutput(FILE *fp, int n, char* FileName){
     fp = fopen(FileName, "w+"); //clear file
     fseek(fp, 0, SEEK_SET);
-    for(int i=0; i<ARRAY_MAP_WIDTH; i++){
-        for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-            fprintf(fp, "%hd\t", map[n][i][j]);
-        fprintf(fp, "\n");
-    }
+    fwrite(map[n], sizeof(short), ARRAY_MAP_WIDTH * ARRAY_MAP_WIDTH, fp); // 因為記憶體都是連續的，所以給定位置，要輸入多少，就會全部輸出
     fclose(fp);
 }
 
