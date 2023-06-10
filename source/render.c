@@ -24,12 +24,12 @@ enum searchWord_colorData
 };
 SDL_Renderer *renderer;
 
-// 記住的文字 Font、成功失敗文字、暫停文字、載入背景、之前的時間
+// 記住的文字 Font、成功失敗文字、暫停文字、背景、地圖 cursor
 TTF_Font *font;
 SDL_Texture *searchNotify_Texture[2]; // read [] and () before *，所以是放2個pointer的array
-SDL_Texture *background_texture;
 SDL_Texture *pauseWord_texture;
-int beforeTime = 0;
+SDL_Texture *background_texture;
+SDL_Texture *mapCurosr_texture;
 
 // 相機、背景位置
 SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0};
@@ -88,6 +88,14 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
         fprintf(stderr, "Failed to open background picture");
         SDL_EndAll_StopProgram();
     }
+
+    // 載入背景
+    mapCurosr_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("mapCursor", "png"));
+    if(background_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open mapCurosr picture");
+        SDL_EndAll_StopProgram();
+    }
 }
 
 // 取得各種素材的位置用(副檔名不用加 .) (失敗回傳 NULL)
@@ -137,9 +145,10 @@ public void Render_Clear()
     // SearchWords 結束
     SearchWords_Clear();
 
-    // free 暫停文字、背景圖
+    // free 暫停文字、背景圖、mapCursor
     SDL_DestroyTexture(pauseWord_texture);
     SDL_DestroyTexture(background_texture);
+    SDL_DestroyTexture(mapCurosr_texture);
 }
 
 // 畫出背景
@@ -159,7 +168,7 @@ public void Render_RenderBackground()
         addSideIndex_y = -1;
     
     // 畫出剩下3個
-    rect.x += WINDOW_WIDTH * addSideIndex_x; // 
+    rect.x += WINDOW_WIDTH * addSideIndex_x;
     SDL_RenderCopy(renderer, background_texture, NULL, &rect);
     rect.y -= WINDOW_HEIGHT * addSideIndex_y;
     SDL_RenderCopy(renderer, background_texture, NULL, &rect);
@@ -232,14 +241,20 @@ public void Render_RenderMap()
     }
 }
 
-// 依 camera 差距，畫出背包的 cursor
+// 依 camera 差距，畫出 Map 的 cursor
 public void Render_RenderMapCursor()
 {
     // 取得 cursor 位置、大小
-    // SDL_position cursorPos = Map_GetCursorPosition();
-    // SDL_size cursorize = Map_GetCursorSize();
+    SDL_position cursorPos = Map_GetCursorPosition();
+    SDL_size cursorize = Map_GetCursorSize();
+    cursorPos.x *= cursorize.width;
+    cursorPos.y *= cursorize.height;
 
     // 要算出 camera 相對位置
+    SDL_Rect rect = (SDL_Rect){.x = cursorPos.x - cameraPosition.x, .y = -(cursorPos.y - cameraPosition.y), .w = cursorize.width, .h = cursorize.height};
+
+    // 畫出
+    SDL_RenderCopy(renderer, mapCurosr_texture, NULL, &rect);
 }
 
 // 畫出快捷欄
@@ -562,6 +577,7 @@ public void Render_MoveCamera()
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
     // 算出上次移動與這次移動的時間差 (每次呼叫時間不同)
+    static int beforeTime = 0;
     int nowtime = SDL_GetTicks64();
     int deltaTime = nowtime - beforeTime;
     beforeTime = nowtime;

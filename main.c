@@ -106,7 +106,7 @@ int main(void)
         
         // 畫出地圖、地圖cursor
         Render_RenderMap();
-        //Render_RenderMapCursor();
+        Render_RenderMapCursor();
 
         // 移動、顯示快捷欄
         // HotBar_MoveCursor();
