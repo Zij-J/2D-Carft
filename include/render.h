@@ -9,13 +9,14 @@ void Render_RenderHotbar();
 void Render_RenderHotbarCursor();
 
 // finished
+void Render_Init(SDL_Renderer* rememberedRenderer);
+void Render_Clear();
+void Render_RenderBackground();
 void Render_RenderSearchNotify(bool isSuccessSearching);
 void Render_RenderSearchMessage(bool isSuccessSearching);
 void Render_RenderMap();
 void Render_RenderSearchWords();
-void Render_RememberRenderer(SDL_Renderer* rememberedRenderer);
 void SearchWords_GetInputWord(SDL_Event event);
-void SearchWords_Init();
 void SearchWords_Clear();
 void Render_MoveCamera(SDL_Event event);
 char *SearchWords_GetSearchingWords();

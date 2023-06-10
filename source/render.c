@@ -12,8 +12,11 @@
 #define DEFULT_ARRAY_SIZE 2            // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72   // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
-#define MAX_CAMERA_MOVE_SPEED 5       // 相機最大移動速度 (每一秒移動多少像素)
-#define CAMERA_MOVE_ACCLERATION 10      // 相機移動加速度 (每一毫秒加速度)
+#define MIN_MOVEMENT_DELTATIME 5   // 每次實際移動間隔時間(毫秒)，用於累積移動量，避免換成秒後都變0
+#define MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME 20   // 如果超過 X 毫秒沒有呼叫過移動 camera 函式(理論上每個 while 都要呼叫)，就推測是 bug
+#define MAX_CAMERA_MOVE_SPEED 2       // 相機最大移動速度 (每一秒移動多少像素)
+#define CAMERA_MOVE_ACCLERATION 5     // 相機移動加速度 (每一毫秒加速度)
+#define BACKGROUND_SLOWER_TIMES 10 // 背景比相機慢幾倍
 enum searchWord_colorData
 {
     searchWord_red = 255,
@@ -22,13 +25,15 @@ enum searchWord_colorData
 };
 SDL_Renderer *renderer;
 
-// 記住的文字 Font、成功失敗文字、之前的時間
+// 記住的文字 Font、成功失敗文字、載入背景、之前的時間
 TTF_Font *font;
 SDL_Texture *searchNotify_Texture[2]; // read [] and () before *，所以是放2個pointer的array
+SDL_Texture *background_texture;
 int beforeTime = 0;
 
-// 相機位置
+// 相機、背景位置
 SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0};
+SDL_position background_position = (SDL_position){.x = 0, .y = 0};
 
 // 搜尋文字 Array 建立 (存字串 for 比對，存 SDL_Texture for 快速顯示，不用每次顯示都要 load Texture)
 struct wordsArray_tmpStructName
@@ -58,14 +63,105 @@ struct cameraVelocityRecord
 };
 struct cameraVelocityRecord cameraVelocityRecord = (struct cameraVelocityRecord){.x = 0, .y = 0};
 
+
+private char *GetAssetsInFolder(const char *folderName, const char *extensionName);
 private void Render_RenderBlockInBackpack(SDL_position nowPos, int blockID);
-private TTF_Font *SearchWords_openFont();
+private void SearchWords_Init();
 private void SearchWords_chaningPressingShift(char *inputChar, SDL_Event event);
 
-// 讓 Render 記住 renderer，之後就不用傳入 renderer
-public void Render_RememberRenderer(SDL_Renderer *rememberedRenderer)
+
+// render 內部載入各種初始化用
+public void Render_Init(SDL_Renderer *rememberedRenderer)
 {
+    // 讓 Render 記住 renderer，之後就不用傳入 renderer
     renderer = rememberedRenderer;
+
+    // SearchWords 初始化
+    SearchWords_Init();
+
+    // 載入背景
+    background_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("background", "png"));
+    if(background_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open background picture");
+        SDL_EndAll_StopProgram();
+    }
+}
+
+// 取得各種素材的位置用(副檔名不用加 .) (失敗回傳 NULL)
+private char *GetAssetsInFolder(const char *folderName, const char *extensionName)
+{
+    // 開 file path 名字 buffer、建立到 font 資料夾的絕對路徑
+    char path[MAX_ABBSOULTE_PATH_LENGTH]; // 這個一下就結束了，不太需要優化，所以 buffer 直接開超大就好
+    getcwd(path, sizeof(path));           // 取得目前工作目錄
+    char pathToFolder[MAX_ABBSOULTE_PATH_LENGTH]; sprintf(pathToFolder, "/assets/%s/", folderName);
+    strcat(path, pathToFolder);           // 接到要開的資料夾裡
+    
+    // 打開 dir
+    DIR *dir;
+    if ((dir = opendir(path)) == NULL)
+    {
+        fprintf(stderr, "Failed to open folder: %s\n", path);
+        return NULL;
+    }
+
+    // 讀 dir 內的所有 subfile
+    struct dirent *fileData;
+    while ((fileData = readdir(dir)) != NULL) // 會用字母順序排，所以如果有多個需要的 extension，最接近A的會被開啟
+    {
+        // 副檔名長度
+        int extensionLength = strlen(extensionName);
+
+        // 取的最後四個字
+        int fileName_lastWordStartIndex = strlen((*fileData).d_name) - 1 - extensionLength; // -1 換 0-base，因不含\0，會到末index，-extensionLength是到前extensionLength index，也就是前extensionLength+1個字
+        char fileName_lastWords[extensionLength+1 + 1]; // 含. \0，所以 +1 +1
+        for (int i = 0; i < extensionLength+1; ++i)
+            fileName_lastWords[i] = (*fileData).d_name[fileName_lastWordStartIndex + i];
+        fileName_lastWords[extensionLength+1] = '\0';
+
+        // 是否最後四個字(副檔名) 是 我們要的
+        char fullExtension[MAX_ABBSOULTE_PATH_LENGTH]; sprintf(fullExtension, ".%s", extensionName);
+        if (strcmp(fileName_lastWords, fullExtension) == 0)              
+            return  strcat(path, (*fileData).d_name);  // 接到 目前路徑，回傳 + 結束 loop
+    }
+    // 到此，代表沒找到
+    fprintf(stderr, "Can't find any .%s file in %s\n", extensionName, path);
+    return NULL;
+}
+
+// render 內部解除各種功能用
+public void Render_Clear()
+{
+    // SearchWords 結束
+    SearchWords_Clear();
+
+    // free 背景圖
+    SDL_DestroyTexture(background_texture);
+}
+
+// 畫出背景
+public void Render_RenderBackground()
+{
+    // 所需設定
+    int addSideIndex_x = 1, addSideIndex_y = 1; // 1是加右邊，-1是加左邊 
+    SDL_Rect rect = (SDL_Rect){.x = background_position.x, .y =  -background_position.y, .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
+
+    // 先畫目前的
+    SDL_RenderCopy(renderer, background_texture, NULL, &rect);
+
+    // 判斷是否要換方向 (往左 or 往右填)
+    if(background_position.x > 0)
+        addSideIndex_x = -1;
+    if(background_position.y > 0)
+        addSideIndex_y = -1;
+    
+    // 畫出剩下3個
+    rect.x += WINDOW_WIDTH * addSideIndex_x; // 
+    SDL_RenderCopy(renderer, background_texture, NULL, &rect);
+    rect.y -= WINDOW_HEIGHT * addSideIndex_y;
+    SDL_RenderCopy(renderer, background_texture, NULL, &rect);
+    rect.x -= WINDOW_WIDTH * addSideIndex_x;
+    SDL_RenderCopy(renderer, background_texture, NULL, &rect);
 }
 
 // 畫背包到 renderer
@@ -193,7 +289,7 @@ public void Render_RenderSearchWords()
 }
 
 // 初始化，搜尋文字 Array
-public void SearchWords_Init()
+private void SearchWords_Init()
 {
     // 分配記憶體、初始化
     searchWords = (wordsArray *)malloc(sizeof(wordsArray));
@@ -209,7 +305,7 @@ public void SearchWords_Init()
         SDL_EndAll_StopProgram();
     }
     // font 要先記住，之後在結束時才能 Close，記住也就不用每次開啟，方便
-    font = SearchWords_openFont();
+    font = TTF_OpenFont(GetAssetsInFolder("font", "ttf"), FONT_DEFULT_PIXEL_QUALITY);;
     if (font == NULL)
     {
         fprintf(stderr, "Failed to open TTF file: %s\n", TTF_GetError());
@@ -230,45 +326,6 @@ public void SearchWords_Init()
         searchNotify_Texture[i] = SDL_CreateTextureFromSurface(renderer, wordsSerface); // serface 轉 texture
         SDL_FreeSurface(wordsSerface);                                                  // serface 沒用了
     }
-}
-
-// 開啟 Font ，失敗都回傳 NULL，成功就回傳 TTF_OpenFont get的東西
-private TTF_Font *SearchWords_openFont()
-{
-    // 開 file path 名字 buffer、建立到 font 資料夾的絕對路徑
-    char path[MAX_ABBSOULTE_PATH_LENGTH]; // 這個一下就結束了，不太需要優化，所以 buffer 直接開超大就好
-    getcwd(path, sizeof(path));           // 取得目前工作目錄
-    strcat(path, "/font/");               // 接到 font 資料夾裡
-
-    // 打開 dir
-    DIR *dir;
-    if ((dir = opendir(path)) == NULL)
-    {
-        fprintf(stderr, "Failed to open folder: %s\n", path);
-        return NULL;
-    }
-
-    // 讀 dir 內的所有 subfile
-    struct dirent *fileData;
-    while ((fileData = readdir(dir)) != NULL) // 會用字母順序排，所以如果有多個 .tff，最接近A的會被開啟
-    {
-        // 取的最後四個字
-        int fileName_lastFourWordStartIndex = strlen((*fileData).d_name) - 1 - 3; // -1 換 0-base，因不含\0，會到末index，-3是到前3 index，也就是前4個字
-        char fileName_lastFourWords[4 + 1];
-        for (int i = 0; i < 4; ++i)
-            fileName_lastFourWords[i] = (*fileData).d_name[fileName_lastFourWordStartIndex + i];
-        fileName_lastFourWords[4] = '\0';
-
-        // 是否最後四個字(副檔名) 是 ".ttf"
-        if (strcmp(fileName_lastFourWords, ".ttf") == 0)
-        {
-            strcat(path, (*fileData).d_name);                     // 接到 目前路徑
-            return TTF_OpenFont(path, FONT_DEFULT_PIXEL_QUALITY); // 打開 + 回傳找到的 + 結束 loop
-        }
-    }
-    // 到此，代表沒找到
-    fprintf(stderr, "Can't find any .ttf file in %s\n", path);
-    return NULL;
 }
 
 // 清除，搜尋文字 Array
@@ -467,56 +524,82 @@ public void Render_RenderSearchNotify(bool isSuccessSearching)
 // 移動相機
 public void Render_MoveCamera(SDL_Event event)
 {
+    // 可能因移動 windows 導致整個遊戲無預警暫停，對用「時間」處理移動的 camera 非常傷，要處理
+    static bool bugState_ForceStop = false;
+   
+    const Uint8* keystate = SDL_GetKeyboardState(NULL);
+    //continuous-response keys
+    if(keystate[SDL_SCANCODE_A])
+        printf("ok");
+    movingInputState.isPressing_w = keystate[SDL_SCANCODE_W];
+    movingInputState.isPressing_s = keystate[SDL_SCANCODE_S];
+    movingInputState.isPressing_a = keystate[SDL_SCANCODE_A];
+    movingInputState.isPressing_d = keystate[SDL_SCANCODE_D];
+
     // 偵測輸入
     if (event.type == SDL_KEYDOWN)
     {
         switch (event.key.keysym.sym)
         {
-        case SDLK_w:
-            movingInputState.isPressing_w = true;
-            break;
-        case SDLK_s:
-            movingInputState.isPressing_s = true;
-            break;
-        case SDLK_d:
-            movingInputState.isPressing_d = true;
-            break;
-        case SDLK_a:
-            movingInputState.isPressing_a = true;
-            break;
+            case SDLK_w:
+                movingInputState.isPressing_w = true;            
+                break;
+            case SDLK_s:
+                movingInputState.isPressing_s = true;
+                break;
+            case SDLK_d:
+                movingInputState.isPressing_d = true;
+                break;
+            case SDLK_a:
+                movingInputState.isPressing_a = true;
+                break;
         }
     }
     if (event.type == SDL_KEYUP)
     {
         switch (event.key.keysym.sym)
         {
-        case SDLK_w:
-            movingInputState.isPressing_w = false;
-            break;
-        case SDLK_s:
-            movingInputState.isPressing_s = false;
-            break;
-        case SDLK_d:
-            movingInputState.isPressing_d = false;
-            break;
-        case SDLK_a:
-            movingInputState.isPressing_a = false;
-            break;
+            case SDLK_w:
+                movingInputState.isPressing_w = false;
+                break;
+            case SDLK_s:
+                movingInputState.isPressing_s = false;
+                break;
+            case SDLK_d:
+                movingInputState.isPressing_d = false;
+                break;
+            case SDLK_a:
+                movingInputState.isPressing_a = false;
+                break;
         }
     }
 
     // 算出上次移動與這次移動的時間差 (每次呼叫時間不同)
     int nowtime = SDL_GetTicks64();
     int deltaTime = nowtime - beforeTime;
+    if(deltaTime >  MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 太久沒呼叫了，推測是 bug 了，處理
+    {
+        bugState_ForceStop = true;
+        movingInputState = (struct movingInputState){.isPressing_a = false, .isPressing_d = false, .isPressing_s = false, .isPressing_w = false}; // 可能在 bug 時放開，就沒偵測到放開導會不斷前進，所以有 bug 就直接關掉
+    }
+    if (bugState_ForceStop == true) // bug 狀態，不執行下面的東西，但不斷偵測是否能回去正常狀態
+    {
+        if(deltaTime <=  MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 回復正常了！
+            bugState_ForceStop = false;
+        beforeTime = nowtime; // 更新偵測時間
+        return ;
+    }
+    if(deltaTime < MIN_MOVEMENT_DELTATIME) // 限制一下最低 frame rate，不然移動太少，毫秒變秒的除法就都是 0 了
+        return ;
     beforeTime = nowtime;
-    
+
     // 移動 (加速度 * 時間 = 速度) // 反方向輸入，直接把速度歸0
     bool isPressing = false;
     if (movingInputState.isPressing_w)
     {
         if (cameraVelocityRecord.y < 0) 
             cameraVelocityRecord.y = 0;
-        if(cameraVelocityRecord.y < MAX_CAMERA_MOVE_SPEED * 1000) // 最大速限要把毫秒換秒
+        if(cameraVelocityRecord.y < MAX_CAMERA_MOVE_SPEED * 1000) // 最大速限要把秒換毫秒
             cameraVelocityRecord.y += CAMERA_MOVE_ACCLERATION * deltaTime;
         isPressing = true;
     }
@@ -549,18 +632,39 @@ public void Render_MoveCamera(SDL_Event event)
     if (!isPressing)
     {
         if (cameraVelocityRecord.x > 0)
+        {
             cameraVelocityRecord.x -= CAMERA_MOVE_ACCLERATION * deltaTime;
+            if(cameraVelocityRecord.x < 0) cameraVelocityRecord.x = 0;
+        }    
         if (cameraVelocityRecord.x < 0)
+        {
             cameraVelocityRecord.x += CAMERA_MOVE_ACCLERATION * deltaTime;
+            if(cameraVelocityRecord.x > 0) cameraVelocityRecord.x = 0;
+        }
         if (cameraVelocityRecord.y > 0)
+        {
             cameraVelocityRecord.y -= CAMERA_MOVE_ACCLERATION * deltaTime;
+            if(cameraVelocityRecord.y < 0) cameraVelocityRecord.y = 0;
+        }   
         if (cameraVelocityRecord.y < 0)
+        {
             cameraVelocityRecord.y += CAMERA_MOVE_ACCLERATION * deltaTime;
+            if(cameraVelocityRecord.y > 0) cameraVelocityRecord.y = 0;
+        }
     }
 
     // 移動 (速度 * 時間 = 距離)
-    cameraPosition.x += cameraVelocityRecord.x * deltaTime /1000;
+    //static ;
+    cameraPosition.x += cameraVelocityRecord.x * deltaTime /1000; // 除以1000把毫秒換秒
     cameraPosition.y += cameraVelocityRecord.y * deltaTime /1000;
+    background_position.x -= cameraVelocityRecord.x * deltaTime /1000 /BACKGROUND_SLOWER_TIMES; // camera 前進，背景後退
+    background_position.y -= cameraVelocityRecord.y * deltaTime /1000 / BACKGROUND_SLOWER_TIMES;
+
+    // 背景移動過頭，返回原點
+    if(background_position.x > WINDOW_WIDTH || background_position.x < -WINDOW_WIDTH )
+        background_position.x = 0;
+    if(background_position.y > WINDOW_HEIGHT || background_position.y < -WINDOW_HEIGHT )
+        background_position.y = 0; 
 }
 
 // 取得相機絕對位置

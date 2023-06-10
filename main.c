@@ -22,13 +22,13 @@ int main(void)
     SDL_InitializeAll(&window, &renderer);
 
     // 初始化前準備
-    Render_RememberRenderer(renderer); // 讓 render source file 記住 renderer，就不用每次 render 都要傳入 (要比 searchWords_Init 先，那邊會用到 renderer)
+    
 
-    // 資料庫初始化
+    // 資料庫準備初始化 + render 準備
     // TextureBase_Init();
     // HotBar_Init();
     Map_Init();
-    SearchWords_Init();
+    Render_Init(renderer);
     
     // 偵測輸入(主迴圈)
     SDL_Event event;
@@ -36,13 +36,14 @@ int main(void)
     {
         // get 輸入
         SDL_PollEvent(&event); // 無論有沒有都輸入都執行 loop ，似真正遊戲
-
+        
         // 按叉叉，結束
         if (event.type == SDL_QUIT)
             break;
-
-        // 清除畫面
+        
+        // 清除畫面 + 畫背景
         SDL_RenderClear(renderer);
+        Render_RenderBackground();
 
         // 開關背包
         Backpack_Switch(event);
@@ -97,12 +98,11 @@ int main(void)
             #endif
             // 依輸入移動 cursor 不斷更新 cursor 位置
             Map_MoveCursor(event); 
-
-            // 畫出地圖、地圖cursor
-            Render_RenderMap();
-            //Render_RenderMapCursor();
         }
         
+        // 畫出地圖、地圖cursor
+        Render_RenderMap();
+        //Render_RenderMapCursor();
 
         // 移動、顯示快捷欄
         // HotBar_MoveCursor();
@@ -114,7 +114,7 @@ int main(void)
     }
 
     // 結束程式
-    SearchWords_Clear();
+    Render_Clear();
     Map_Clear();
     // HotBar_Clear();
     // TextureBase_Clear();
