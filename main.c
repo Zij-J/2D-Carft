@@ -21,9 +21,6 @@ int main(void)
     SDL_Renderer* renderer;
     SDL_InitializeAll(&window, &renderer);
 
-    // 初始化前準備
-    
-
     // 資料庫準備初始化 + render 準備
     // TextureBase_Init();
     // HotBar_Init();

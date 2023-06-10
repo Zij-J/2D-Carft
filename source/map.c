@@ -215,7 +215,7 @@ public void Map_UpdateMaps()
         swap(&arr_relative_pos[0], &arr_relative_pos[1]);
         swap(&arr_relative_pos[2], &arr_relative_pos[3]);
     }
-    else if(cam.x > arr_xy[arr_relative_pos[1]].x+ARRAY_MAP_WIDTH-TOTAL_BLOCK_NUMBER_IN_WIDTH){ //Right out of range
+    else if(cam.x > arr_xy[arr_relative_pos[1]].x+ARRAY_MAP_WIDTH-TOTAL_BLOCK_NUMBER_IN_WIDTH -1){ //Right out of range // 在邊界的上一格就會用到此邊界(想想相機在方塊中間情形)，所以要 -1
         Map_Foutput(fp[arr_relative_pos[0]], arr_relative_pos[0], file_name(arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y));
         Map_Foutput(fp[arr_relative_pos[2]], arr_relative_pos[2], file_name(arr_xy[arr_relative_pos[2]].x, arr_xy[arr_relative_pos[2]].y));
         Map_Finput(arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x+2*ARRAY_MAP_WIDTH, arr_xy[arr_relative_pos[0]].y);
@@ -233,7 +233,7 @@ public void Map_UpdateMaps()
         swap(&arr_relative_pos[0], &arr_relative_pos[2]);
         swap(&arr_relative_pos[1], &arr_relative_pos[3]);
     }
-    else if(cam.y < arr_xy[arr_relative_pos[2]].y-ARRAY_MAP_WIDTH+TOTAL_BLOCK_NUMBER_IN_HEIGHT){ //Down out of range 
+    else if(cam.y < arr_xy[arr_relative_pos[2]].y-ARRAY_MAP_WIDTH+TOTAL_BLOCK_NUMBER_IN_HEIGHT +1){ //Down out of range // 在邊界的上一格就會用到此邊界(想想相機在方塊中間情形)，所以要 +1
         Map_Foutput(fp[arr_relative_pos[0]], arr_relative_pos[0], file_name(arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y));
         Map_Foutput(fp[arr_relative_pos[1]], arr_relative_pos[1], file_name(arr_xy[arr_relative_pos[1]].x, arr_xy[arr_relative_pos[1]].y));
         Map_Finput(arr_relative_pos[0], arr_xy[arr_relative_pos[0]].x, arr_xy[arr_relative_pos[0]].y-2*ARRAY_MAP_WIDTH);

@@ -12,7 +12,6 @@
 #define DEFULT_ARRAY_SIZE 2            // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72   // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
-#define MIN_MOVEMENT_DELTATIME 5   // 每次實際移動間隔時間(毫秒)，用於累積移動量，避免換成秒後都變0
 #define MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME 20   // 如果超過 X 毫秒沒有呼叫過移動 camera 函式(理論上每個 while 都要呼叫)，就推測是 bug
 #define MAX_CAMERA_MOVE_SPEED 2       // 相機最大移動速度 (每一秒移動多少像素)
 #define CAMERA_MOVE_ACCLERATION 5     // 相機移動加速度 (每一毫秒加速度)
@@ -44,16 +43,6 @@ struct wordsArray_tmpStructName
 };
 typedef struct wordsArray_tmpStructName wordsArray;
 wordsArray *searchWords;
-
-// 同時 上下 + 左右，就要記錄是否按著按鍵
-struct movingInputState
-{
-    bool isPressing_w;
-    bool isPressing_s;
-    bool isPressing_d;
-    bool isPressing_a;
-};
-struct movingInputState movingInputState = (struct movingInputState){.isPressing_w = false}; // 其他都會變成 false (0)
 
 // 相機速度紀錄 (預設速度 0,0)
 struct cameraVelocityRecord
@@ -524,78 +513,19 @@ public void Render_RenderSearchNotify(bool isSuccessSearching)
 // 移動相機
 public void Render_MoveCamera(SDL_Event event)
 {
-    // 可能因移動 windows 導致整個遊戲無預警暫停，對用「時間」處理移動的 camera 非常傷，要處理
-    static bool bugState_ForceStop = false;
-   
+    // 偵測輸入 (偵測是否有按著鍵盤)
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    //continuous-response keys
-    if(keystate[SDL_SCANCODE_A])
-        printf("ok");
-    movingInputState.isPressing_w = keystate[SDL_SCANCODE_W];
-    movingInputState.isPressing_s = keystate[SDL_SCANCODE_S];
-    movingInputState.isPressing_a = keystate[SDL_SCANCODE_A];
-    movingInputState.isPressing_d = keystate[SDL_SCANCODE_D];
-
-    // 偵測輸入
-    if (event.type == SDL_KEYDOWN)
-    {
-        switch (event.key.keysym.sym)
-        {
-            case SDLK_w:
-                movingInputState.isPressing_w = true;            
-                break;
-            case SDLK_s:
-                movingInputState.isPressing_s = true;
-                break;
-            case SDLK_d:
-                movingInputState.isPressing_d = true;
-                break;
-            case SDLK_a:
-                movingInputState.isPressing_a = true;
-                break;
-        }
-    }
-    if (event.type == SDL_KEYUP)
-    {
-        switch (event.key.keysym.sym)
-        {
-            case SDLK_w:
-                movingInputState.isPressing_w = false;
-                break;
-            case SDLK_s:
-                movingInputState.isPressing_s = false;
-                break;
-            case SDLK_d:
-                movingInputState.isPressing_d = false;
-                break;
-            case SDLK_a:
-                movingInputState.isPressing_a = false;
-                break;
-        }
-    }
 
     // 算出上次移動與這次移動的時間差 (每次呼叫時間不同)
     int nowtime = SDL_GetTicks64();
     int deltaTime = nowtime - beforeTime;
-    if(deltaTime >  MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 太久沒呼叫了，推測是 bug 了，處理
-    {
-        bugState_ForceStop = true;
-        movingInputState = (struct movingInputState){.isPressing_a = false, .isPressing_d = false, .isPressing_s = false, .isPressing_w = false}; // 可能在 bug 時放開，就沒偵測到放開導會不斷前進，所以有 bug 就直接關掉
-    }
-    if (bugState_ForceStop == true) // bug 狀態，不執行下面的東西，但不斷偵測是否能回去正常狀態
-    {
-        if(deltaTime <=  MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 回復正常了！
-            bugState_ForceStop = false;
-        beforeTime = nowtime; // 更新偵測時間
-        return ;
-    }
-    if(deltaTime < MIN_MOVEMENT_DELTATIME) // 限制一下最低 frame rate，不然移動太少，毫秒變秒的除法就都是 0 了
-        return ;
     beforeTime = nowtime;
+    if(deltaTime >  MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 太久沒呼叫此函式，是暫停，所以之前的時間不算，要重算一次真正從沒暫停開始時間
+        return ;
 
     // 移動 (加速度 * 時間 = 速度) // 反方向輸入，直接把速度歸0
     bool isPressing = false;
-    if (movingInputState.isPressing_w)
+    if (keystate[SDL_SCANCODE_W]) // 回傳 1 代表按著(測試了快按也會偵測到)，0 代表沒按
     {
         if (cameraVelocityRecord.y < 0) 
             cameraVelocityRecord.y = 0;
@@ -603,7 +533,7 @@ public void Render_MoveCamera(SDL_Event event)
             cameraVelocityRecord.y += CAMERA_MOVE_ACCLERATION * deltaTime;
         isPressing = true;
     }
-    if (movingInputState.isPressing_s)
+    if (keystate[SDL_SCANCODE_S])
     {
         if (cameraVelocityRecord.y > 0)
             cameraVelocityRecord.y = 0;
@@ -611,7 +541,7 @@ public void Render_MoveCamera(SDL_Event event)
             cameraVelocityRecord.y -= CAMERA_MOVE_ACCLERATION * deltaTime;
         isPressing = true;
     }
-    if (movingInputState.isPressing_d)
+    if (keystate[SDL_SCANCODE_D])
     {
         if (cameraVelocityRecord.x < 0)
             cameraVelocityRecord.x = 0;
@@ -619,7 +549,7 @@ public void Render_MoveCamera(SDL_Event event)
             cameraVelocityRecord.x += CAMERA_MOVE_ACCLERATION * deltaTime;
         isPressing = true;
     }
-    if (movingInputState.isPressing_a)
+    if (keystate[SDL_SCANCODE_A])
     {
         if (cameraVelocityRecord.x > 0)
             cameraVelocityRecord.x = 0;
@@ -653,12 +583,35 @@ public void Render_MoveCamera(SDL_Event event)
         }
     }
 
-    // 移動 (速度 * 時間 = 距離)
-    //static ;
-    cameraPosition.x += cameraVelocityRecord.x * deltaTime /1000; // 除以1000把毫秒換秒
-    cameraPosition.y += cameraVelocityRecord.y * deltaTime /1000;
-    background_position.x -= cameraVelocityRecord.x * deltaTime /1000 /BACKGROUND_SLOWER_TIMES; // camera 前進，背景後退
-    background_position.y -= cameraVelocityRecord.y * deltaTime /1000 / BACKGROUND_SLOWER_TIMES;
+    // 相機移動 (速度 * 時間 = 距離)
+    static SDL_position acculmatedMovement = (SDL_position){.x = 0, .y = 0}, acculmatedRealMove = (SDL_position){.x = 0, .y = 0};
+    acculmatedMovement.x += cameraVelocityRecord.x * deltaTime;
+    acculmatedMovement.y += cameraVelocityRecord.y * deltaTime;
+    // 因微小變化 /0 會消失，所以要用累計，夠多才能實際移動 camera
+    if(acculmatedMovement.x >= 1000 || acculmatedMovement.x <= -1000) // 要把毫秒換秒，所以以 1000 為單位
+    {
+        cameraPosition.x += acculmatedMovement.x /1000; // 多了幾個 1000 就多幾步
+        acculmatedRealMove.x += acculmatedMovement.x /1000; // 累積實際移動量 for 背景
+        acculmatedMovement.x %= 1000; // 剩的留著
+    }
+    if(acculmatedMovement.y >= 1000 || acculmatedMovement.y <= -1000)
+    {
+        cameraPosition.y += acculmatedMovement.y /1000;
+        acculmatedRealMove.y += acculmatedMovement.y /1000;
+        acculmatedMovement.y %= 1000;
+    }
+    // 背景移動 (每一動 BACKGROUND_SLOWER_TIMES 才移動1步)
+    if(acculmatedRealMove.x >= BACKGROUND_SLOWER_TIMES || acculmatedRealMove.x <= -BACKGROUND_SLOWER_TIMES) // 要把毫秒換秒，所以以 1000 為單位
+    {
+        background_position.x -= acculmatedRealMove.x / BACKGROUND_SLOWER_TIMES; // camera 往前，backbround 往後
+        acculmatedRealMove.x %= BACKGROUND_SLOWER_TIMES; // 剩的留著
+    }
+    if(acculmatedRealMove.y >= BACKGROUND_SLOWER_TIMES || acculmatedRealMove.y <= -BACKGROUND_SLOWER_TIMES) 
+    {
+        background_position.y -= acculmatedRealMove.y / BACKGROUND_SLOWER_TIMES; 
+        acculmatedRealMove.y %= BACKGROUND_SLOWER_TIMES; 
+    }
+
 
     // 背景移動過頭，返回原點
     if(background_position.x > WINDOW_WIDTH || background_position.x < -WINDOW_WIDTH )
