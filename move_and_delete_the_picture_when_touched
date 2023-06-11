@@ -1,0 +1,178 @@
+#include <stdio.h>
+#include "./SDL2/SDL.h"
+#include "./SDL2/SDL_image.h"
+#include <stdbool.h>
+
+#undef main
+
+int main(int argc, char** argv) {
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    // Initialize SDL_image
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        fprintf(stderr, "Failed to initialize SDL_image: %s\n", IMG_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    // Create window
+    SDL_Window* window = SDL_CreateWindow("SDL Image Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 480, SDL_WINDOW_SHOWN);
+
+    // Create renderer
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    // Load images as textures
+    SDL_Surface* imageSurface1 = IMG_Load("backpack2.png");
+    SDL_Texture* imageTexture1 = SDL_CreateTextureFromSurface(renderer, imageSurface1);
+
+    SDL_Surface* imageSurface2 = IMG_Load("image.png");
+    SDL_Texture* imageTexture2 = SDL_CreateTextureFromSurface(renderer, imageSurface2);
+
+    SDL_Surface* imageSurface2_2 = IMG_Load("image2.png");
+    SDL_Texture* imageTexture2_2 = SDL_CreateTextureFromSurface(renderer, imageSurface2_2);
+
+    SDL_Surface* imageSurface3 = IMG_Load("hotbar.png");
+    SDL_Texture* imageTexture3 = SDL_CreateTextureFromSurface(renderer, imageSurface3);
+
+    // Set the destination rectangles for images
+    SDL_Rect destRect1 = { 160, 140, 400, 200 };
+
+    SDL_Rect destRect2 = { 175.5 + (30+((float)99/8))*0, 156.5 + 43 * 0, 30, 30 };//X軸的星號後面即列向格子(0~8)//Y軸的星號後面即行向格子(0~2)
+    SDL_Rect destRect2_o = { 175.5 + (30+((float)99/8))*0, 156.5 + 43 * 0, 30, 30 };
+
+    SDL_Rect destRect2_2 = { 175.5 + (30+((float)99/8))*1, 156.5 + 43 * 0, 30, 30 };
+    SDL_Rect destRect2_2_o = { 175.5 + (30+((float)99/8))*1, 156.5 + 43 * 0, 30, 30 };
+
+    SDL_Rect destRect3 = { 160, 420, 400, 60 };
+
+    // Main loop
+    SDL_Event event;
+    int dragging1 = 0;
+    int dragging2 = 0;
+    int offsetX1 = 0;
+    int offsetY1 = 0;
+    int offsetX2 = 0;
+    int offsetY2 = 0;
+    bool isVisibleA = true;  // 控制A图片的可见性
+    bool isVisibleB = true;  // 控制B图片的可见性
+    bool resetPosition = false;
+    bool isColliding = false; // 标记是否发生碰撞
+    int show_top = 0;
+    // bool isVisibleB = true; // 控制B图片的可见性
+
+    while (1) {
+        while (SDL_PollEvent(&event)) {
+    if (event.type == SDL_QUIT) {
+        goto end_loop;
+    } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+        show_top = 0;
+        if (event.button.button == SDL_BUTTON_LEFT) {
+            if (event.button.x >= destRect2.x && event.button.x <= destRect2.x + destRect2.w &&
+                event.button.y >= destRect2.y && event.button.y <= destRect2.y + destRect2.h) {
+                dragging1 = 1;
+                show_top = 1;
+                offsetX1 = event.button.x - destRect2.x;
+                offsetY1 = event.button.y - destRect2.y;
+            } else if (event.button.x >= destRect2_2.x && event.button.x <= destRect2_2.x + destRect2_2.w &&
+                event.button.y >= destRect2_2.y && event.button.y <= destRect2_2.y + destRect2_2.h) {
+                dragging2 = 1;
+                show_top = 2;
+                offsetX2 = event.button.x - destRect2_2.x;
+                offsetY2 = event.button.y - destRect2_2.y;
+            }
+        }
+    } else if (event.type == SDL_MOUSEBUTTONUP) {
+        if (event.button.button == SDL_BUTTON_LEFT) {
+            dragging1 = 0;
+            dragging2 = 0;
+
+            if (dragging1) {
+                destRect2.x = event.button.x - offsetX1;
+                destRect2.y = event.button.y - offsetY1;
+            } else if (dragging2) {
+                destRect2_2.x = event.button.x - offsetX2;
+                destRect2_2.y = event.button.y - offsetY2;
+            }
+
+            // 判断A图片和B图片是否重叠
+            if (destRect2.x + destRect2.w >= destRect2_2.x &&
+                destRect2.x <= destRect2_2.x + destRect2_2.w &&
+                destRect2.y + destRect2.h >= destRect2_2.y &&
+                destRect2.y <= destRect2_2.y + destRect2_2.h) {
+                isColliding = true;  // 标记为碰撞
+            } else {
+                isColliding = false;  // 未发生碰撞
+            }
+        }
+    } else if (event.type == SDL_MOUSEMOTION) {
+        if (dragging1) {
+            destRect2.x = event.motion.x - offsetX1;
+            destRect2.y = event.motion.y - offsetY1;
+        } else if (dragging2 && !isColliding) {
+            destRect2_2.x = event.motion.x - offsetX2;
+            destRect2_2.y = event.motion.y - offsetY2;
+        }
+    }
+}
+        // Clear the renderer
+        SDL_RenderClear(renderer);
+
+        // Render the images
+        SDL_RenderCopy(renderer, imageTexture1, NULL, &destRect1);
+        SDL_RenderCopy(renderer, imageTexture3, NULL, &destRect3);
+
+        // SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2);
+        SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2_o);
+        SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2_o );
+        if (isColliding && show_top == 1) {
+            destRect2_2 = destRect2_2_o;
+            SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2);
+            isColliding = !isColliding; 
+        } 
+        else if (isColliding && show_top == 2) {
+            destRect2 = destRect2_o;
+            SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2);
+            isColliding = !isColliding; 
+        } 
+
+        else {
+            if(show_top == 2){
+                SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2);
+                SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2);                
+            }
+            else if(show_top == 1){
+                SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2);
+                SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2);
+            }
+            else {
+                SDL_RenderCopy(renderer, imageTexture2_2, NULL, &destRect2_2);
+                SDL_RenderCopy(renderer, imageTexture2, NULL, &destRect2);
+            }
+        }
+
+
+        // Update the renderer
+        SDL_RenderPresent(renderer);
+    }
+
+end_loop:
+    // Clean up resources
+    SDL_FreeSurface(imageSurface1);
+    SDL_FreeSurface(imageSurface2);
+    SDL_FreeSurface(imageSurface2_2);
+    SDL_FreeSurface(imageSurface3);
+    SDL_DestroyTexture(imageTexture1);
+    SDL_DestroyTexture(imageTexture2);
+    SDL_DestroyTexture(imageTexture2_2);
+    SDL_DestroyTexture(imageTexture3);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
+
+    return 0;
+}
