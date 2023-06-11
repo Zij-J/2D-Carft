@@ -32,6 +32,8 @@ SDL_Texture *background_texture;
 SDL_Texture *mapCurosr_texture;
 SDL_Texture *hotbarCursor_texture;
 SDL_Texture *hotbar_texture;
+SDL_Texture *backpackCursor_texture;
+SDL_Texture *backpack_texture;
 
 // 相機、背景位置
 SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0};
@@ -112,6 +114,20 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
         fprintf(stderr, "Failed to open hotbar picture");
         SDL_EndAll_StopProgram();
     }
+
+    // 載入 背包、背包Cursor
+    backpackCursor_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpackCursor", "png"));
+    if(backpackCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open backpackCursor picture");
+        SDL_EndAll_StopProgram();
+    }
+    backpack_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpack", "png"));
+    if(backpackCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open backpack picture");
+        SDL_EndAll_StopProgram();
+    }
 }
 
 // 取得各種素材的位置用(副檔名不用加 .) (失敗回傳 NULL)
@@ -161,10 +177,14 @@ public void Render_Clear()
     // SearchWords 結束
     SearchWords_Clear();
 
-    // free 暫停文字、背景圖、mapCursor
+    // free 暫停文字、背景圖、mapCursor、hotbar、hotbarCursor、背包、背包cursor
     SDL_DestroyTexture(pauseWord_texture);
     SDL_DestroyTexture(background_texture);
     SDL_DestroyTexture(mapCurosr_texture);
+    SDL_DestroyTexture(hotbar_texture);
+    SDL_DestroyTexture(hotbarCursor_texture);
+    SDL_DestroyTexture(backpack_texture);
+    SDL_DestroyTexture(backpackCursor_texture);
 }
 
 // 畫出背景
@@ -196,8 +216,13 @@ public void Render_RenderBackground()
 public void Render_RenderBackpack()
 {
     // 取得背包位置、大小
-    // SDL_position backpackPos = Backpack_GetPosition();
-    // SDL_size backpackSize = Backpack_GetSize();
+    SDL_position backpackPos = Backpack_GetPosition();
+    SDL_size backpackSize = Backpack_GetSize();
+
+    // 畫出背包
+    SDL_Rect rect = (SDL_Rect){.x = backpackPos.x, .y = backpackPos.y, .w = backpackSize.width, .h = backpackSize.height};
+    SDL_RenderCopy(renderer, backpack_texture, NULL, &rect);
+    
 
     // 還要把方塊畫上去
     // int *textureIDs = TextureBase_GetAllBlock();
@@ -218,8 +243,13 @@ private void Render_RenderBlockInBackpack(SDL_position nowPos, int blockID)
 public void Render_RenderBackpackCursor()
 {
     // 取得 cursor 位置、大小
-    // SDL_position cursorPos = Backpack_GetCursorPosition();
-    // SDL_size cursorSize = Backpack_GetCursorSize();
+    SDL_position cursorPos = Backpack_GetCursorPosition(); 
+    if(cursorPos.x == POS_NOT_EXISTS) return ; // 這代表 cursor 不存在，不用畫
+    SDL_size cursorSize = Backpack_GetCursorSize();
+
+    // 畫出 CURSOR
+    SDL_Rect rect = (SDL_Rect){.x = cursorPos.x, .y = cursorPos.y, .w = cursorSize.width, .h = cursorSize.height};
+    SDL_RenderCopy(renderer, backpackCursor_texture, NULL, &rect);
 }
 
 // 依 camera 差距，畫出地圖
