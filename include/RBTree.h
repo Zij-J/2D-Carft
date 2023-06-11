@@ -6,10 +6,10 @@
 typedef enum {BLACK, RED} COLOR;//node color
 typedef enum {NONE, LEFT, RIGHT} SIDE;//parent's L or R child
 
-struct tNode* RBT_init();
-void insert(struct tNode *, blockBase_Data*);
-struct tNode* find(struct tNode*, blockBase_Data*);
-struct tNode* find_root(struct tNode *);
-int* store_data(struct tNode *);
+struct tNode* RBT_init();//initiallize
+void insert(struct tNode *, blockBase_Data*);//insert the node to red black tree
+struct tNode* find(struct tNode*, blockBase_Data*);//find node by block's name
+struct tNode* find_root(struct tNode *);//find red black tree root
+int* store_data(struct tNode *);//store blockID to array
 
 #endif
