@@ -16,6 +16,7 @@
 #define MAX_CAMERA_MOVE_SPEED 2       // 相機最大移動速度 (每一秒移動多少像素)
 #define CAMERA_MOVE_ACCLERATION 5     // 相機移動加速度 (每一毫秒加速度)
 #define BACKGROUND_SLOWER_TIMES 10 // 背景比相機慢幾倍
+#define SEARCH_NOTIFY_DISAPPEAR_MILISECOND 2000 // 提醒文字幾豪秒會不見
 enum searchWord_colorData
 {
     searchWord_red = 255,
@@ -38,6 +39,10 @@ SDL_Texture *backpack_texture;
 // 相機、背景位置
 SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0};
 SDL_position background_position = (SDL_position){.x = 0, .y = 0};
+
+// 紀錄，搜尋是否成功、按Enter的時間點
+bool isSuccessSearching = false;
+int searchStartTime = -SEARCH_NOTIFY_DISAPPEAR_MILISECOND; // 用負的時間，這樣即使從 0 開始就按，也會大於時間差而影藏
 
 // 搜尋文字 Array 建立 (存字串 for 比對，存 SDL_Texture for 快速顯示，不用每次顯示都要 load Texture)
 struct wordsArray_tmpStructName
@@ -492,13 +497,16 @@ public void SearchWords_GetInputWord(SDL_Event event)
         // Backspace，要刪除字
         if (event.key.keysym.sym == SDLK_BACKSPACE)
         {
-            // 取得刪除 index
-            int nowStoredIndex = (*searchWords).nowStored - 1 - 1; // -1到 0-base，是\0，再 -1 才到 \0 後面一個 char
-            // 刪文字、Texture
-            (*searchWords).words[nowStoredIndex] = '\0'; // 把 \0 前移，就是刪除字了
-            SDL_DestroyTexture((*searchWords).wordsTexture[nowStoredIndex]);
-            // --已存東西
-            --(*searchWords).nowStored;
+            if((*searchWords).nowStored >= 2)
+            {
+                // 取得刪除 index
+                int nowStoredIndex = (*searchWords).nowStored - 1 - 1; // -1到 0-base，是\0，再 -1 才到 \0 後面一個 char
+                // 刪文字、Texture
+                (*searchWords).words[nowStoredIndex] = '\0'; // 把 \0 前移，就是刪除字了
+                SDL_DestroyTexture((*searchWords).wordsTexture[nowStoredIndex]);
+                // --已存東西
+                --(*searchWords).nowStored;
+            }
         }
         // 其他，是要新增的字
         else
@@ -627,9 +635,32 @@ public char *SearchWords_GetSearchingWords()
     return (*searchWords).words;
 }
 
-// 畫出 搜尋成功 or 失敗 的文字
-public void Render_RenderSearchNotify(bool isSuccessSearching)
+// 切換 搜尋成功 or 失敗，重設秒數
+public void Render_EnableSearchNotify(bool isSuccessFound)
 {
+    isSuccessSearching = isSuccessFound;
+    searchStartTime = SDL_GetTicks64();
+}
+
+// 強制關閉搜尋提醒
+public void Render_ForceCloseSearchNotify()
+{
+    searchStartTime = -SEARCH_NOTIFY_DISAPPEAR_MILISECOND;
+}
+
+// 畫出 搜尋成功 or 失敗 的文字
+public void Render_RenderSearchNotify()
+{
+    // 算是否暫停
+    static int beforeTime; int nowtime = SDL_GetTicks64(); 
+    if(nowtime - beforeTime > MAX_ALLOW_NOT_CALLING_MOVING_DELTATIME) // 是暫停，加上暫停時的時數，才會是正確實際消失時間
+        searchStartTime += (nowtime - beforeTime);
+    beforeTime = nowtime;
+
+    // 時間差大，代表沒有按搜尋，時間差夠小才顯示 (因一開始 SEARCH_NOTIFY_DISAPPEAR_MILISECOND 也不顯示)
+    if(nowtime - searchStartTime > SEARCH_NOTIFY_DISAPPEAR_MILISECOND || nowtime < SEARCH_NOTIFY_DISAPPEAR_MILISECOND)
+        return;
+
     // 取得所有要顯示的資訊
     SDL_position rectPos = Backpack_GetSearchNotifyPosition();
     SDL_size rectSize = Backpack_GetSearchNotifySize();

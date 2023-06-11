@@ -1,6 +1,7 @@
 /* 快捷欄資料庫、UI圖片顯示(含文字array)、背包cursor 與相關操作 */
 #include "../include/basicSetting.h" // 要用的
 #include "../include/texture.h" // 要用的
+#include "../include/render.h" // 要用的
 #include "../include/ui.h" // 要放的
 
 
@@ -135,6 +136,7 @@ public void Backpack_Switch(SDL_Event event)
         else
         {
             backpack_isOn = false;
+            Render_ForceCloseSearchNotify(); // 把提醒文字強制關閉
             if(backpack_cursorArea == searchArea) // 要把 cursor 切回來！
             {
                 SDL_FreeCursor(SDL_GetCursor());
