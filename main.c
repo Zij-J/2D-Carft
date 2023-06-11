@@ -77,22 +77,27 @@ int main(void)
                 {
                     // 輸入搜尋文字
                     SearchWords_GetInputWord(event);
-                    #if TESTING_BACKPACK_FUNCTIONS
-                    // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
-                    if(TextureBase_isFindBlockBySearchWords() == true)
+
+                    // 按 enter，依目前的字去搜尋
+                    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
                     {
-                        // Backpack_FindBlockAndMoveCursor();
-                        Render_RenderSearchNotify(true);
+                        #if TESTING_BACKPACK_FUNCTIONS
+                        // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
+                        if(TextureBase_isFindBlockBySearchWords() == true)
+                        {
+                            // Backpack_FindBlockAndMoveCursor();
+                            Render_EnableSearchNotify(true);
+                        }
+                        // 沒找到，印 提醒沒找到文字
+                        else
+                            Render_EnableSearchNotify(false);
+                        #endif
                     }
-                    // 沒找到，印 提醒沒找到文字
-                    else
-                        Render_RenderSearchNotify(false);
-                    #endif
                 }   
             }
-            
-            
+               
             // 畫背包的 cursor、搜尋文字 到 renderer
+            Render_RenderSearchNotify();
             Render_RenderSearchWords();
             Render_RenderBackpackCursor();
         }
