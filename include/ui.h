@@ -2,34 +2,38 @@
 #ifndef UI
 #define UI
 
+// 背包 cursor 位置，不存在 背包cursor用
+#define POS_NOT_EXISTS -1
 // GetCursorOnArea用，也就是溝通 Cursor 在方塊區、還是在搜尋區
 typedef enum {blockArea, searchArea, nothingArea} cursorArea;
 // searchNotify用，代表成功失敗的 index 
 enum searchNotifyIndex{searchNotifyIndex_success, searchNotifyIndex_failure};
 
 // unfinished
-void HotBar_Init();
-void HotBar_Clear();
-void HotBar_MoveCursor();
-void HotBar_GetAllID();
-short HotBar_GetChosenBlockID();
-void Backpack_MoveCursor(SDL_Event event);
-void Backpack_UpdateBlockToHotbar();
-void Backpack_FindBlockAndMoveCursor();
-bool Backpack_isInput(SDL_Event event);
-SDL_position Hotbar_GetPosition();
-SDL_position Hotbar_GetCursorPosition();
-SDL_position Backpack_GetPosition();
-SDL_position Backpack_GetBlockStartPosition();
-SDL_position Backpack_GetCursorPosition();
-SDL_size Hotbar_GetSize();
-SDL_size HotBar_GetCursorSize();
-SDL_size Backpack_GetSize();
-SDL_size Backpack_GetBlockSize();
-SDL_size Backpack_GetCursorSize();
-cursorArea Backpack_GetCursorOnArea();
+void Backpack_UpdateBlockToHotbar(SDL_Event event);
+void Backpack_FindBlockAndMoveCursor(SDL_Event event);
 
 // finished
+cursorArea Backpack_GetCursorOnArea();
+void Backpack_MoveCursor();
+SDL_position Backpack_GetPosition();
+SDL_position Backpack_GetBlockStartPosition();
+SDL_size Backpack_GetSize();
+SDL_size Backpack_GetBlockSize();
+SDL_position Backpack_GetCursorPosition();
+SDL_size Backpack_GetCursorSize();
+bool Backpack_isInput(SDL_Event event);
+void HotBar_Init();
+void HotBar_Clear();
+void HotBar_GetAllID(short **bufferArray, int *totalIDNumber);
+short HotBar_GetChosenBlockID();
+SDL_position Hotbar_GetPosition();
+SDL_position Hotbar_GetCursorPosition();
+SDL_size Hotbar_GetSize();
+SDL_size HotBar_GetCellSize();
+SDL_position HotBar_GetInCellBlockStartPos();
+SDL_size HotBar_GetInCellBlockSize();
+void HotBar_MoveCursor(SDL_Event event);
 void Backpack_Switch(SDL_Event event);
 bool Backpack_isOpen();
 SDL_position Backpack_GetSearchWordPosition();

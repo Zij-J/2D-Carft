@@ -1,6 +1,7 @@
 /* map大陣列(需存地圖上絕對位置)、地圖file、地圖cursor 與 相關 function (file I/O：map file)*/
 #include "../include/basicSetting.h" // 在這邊 include 就ok！不然include map.h 會重複 inlude 到 basicSetting.h (但因為有寫預防措施所以其實ok，只是這樣比較統一)
 #include "../include/render.h"
+#include "../include/ui.h"
 #include "../include/map.h"
 
 // 要用的 Macro，我想改成這裡 (盡量讓 .h 檔愈簡潔愈好)
@@ -151,7 +152,7 @@ public void Map_EditBlock(SDL_Event event)
     }
 
     // 要取得目前快捷欄選取的方塊編號
-    // short NowChoseBlockID = HotBar_GetChosenBlockID();
+    short NowChoseBlockID = HotBar_GetChosenBlockID();
     
     //check position
     SDL_position cur = cursor_xy; // 用 cursor_xy 就好(已含 camera 位置，是cursor的絕對位置)！我忘記移動與放置是分開的！所以做此改動
@@ -159,7 +160,7 @@ public void Map_EditBlock(SDL_Event event)
     //place block
     if (pressMouseRecord.isPressed){
         if(pressMouseRecord.buttonType==SDL_BUTTON_LEFT) //put down block
-            map[num_relative][ arr_xy[num_relative].y-cur.y ][ cur.x-arr_xy[num_relative].x ]=/*GET_HOTBAR_BLOCK_NUMBER*/0; // 最高在上，cursor只會往下，所以要大減小：arr_xy[num_relative].y-cur.y
+            map[num_relative][ arr_xy[num_relative].y-cur.y ][ cur.x-arr_xy[num_relative].x ]=NowChoseBlockID; // 最高在上，cursor只會往下，所以要大減小：arr_xy[num_relative].y-cur.y
         else if(pressMouseRecord.buttonType==SDL_BUTTON_RIGHT) //del block
             map[num_relative][ arr_xy[num_relative].y-cur.y ][ cur.x-arr_xy[num_relative].x ]=NO_BLOCK_ID; //no block = -9
     }

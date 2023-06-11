@@ -24,12 +24,16 @@ enum searchWord_colorData
 };
 SDL_Renderer *renderer;
 
-// 記住的文字 Font、成功失敗文字、暫停文字、背景、地圖 cursor
+// 記住的文字 Font、成功失敗文字、暫停文字、背景、地圖 cursor、快捷欄cursor、快捷欄
 TTF_Font *font;
 SDL_Texture *searchNotify_Texture[2]; // read [] and () before *，所以是放2個pointer的array
 SDL_Texture *pauseWord_texture;
 SDL_Texture *background_texture;
 SDL_Texture *mapCurosr_texture;
+SDL_Texture *hotbarCursor_texture;
+SDL_Texture *hotbar_texture;
+SDL_Texture *backpackCursor_texture;
+SDL_Texture *backpack_texture;
 
 // 相機、背景位置
 SDL_position cameraPosition = (SDL_position){.x = 0, .y = 0};
@@ -89,11 +93,39 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
         SDL_EndAll_StopProgram();
     }
 
-    // 載入背景
+    // 載入 mapCursor
     mapCurosr_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("mapCursor", "png"));
     if(background_texture == NULL)
     {
         fprintf(stderr, "Failed to open mapCurosr picture");
+        SDL_EndAll_StopProgram();
+    }
+
+    // 載入 hotbar、hotBarCursor
+    hotbarCursor_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("hotbarCursor", "png"));
+    if(hotbarCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open hotbarCursor picture");
+        SDL_EndAll_StopProgram();
+    }
+    hotbar_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("hotbar", "png"));
+    if(hotbarCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open hotbar picture");
+        SDL_EndAll_StopProgram();
+    }
+
+    // 載入 背包、背包Cursor
+    backpackCursor_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpackCursor", "png"));
+    if(backpackCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open backpackCursor picture");
+        SDL_EndAll_StopProgram();
+    }
+    backpack_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpack", "png"));
+    if(backpackCursor_texture == NULL)
+    {
+        fprintf(stderr, "Failed to open backpack picture");
         SDL_EndAll_StopProgram();
     }
 }
@@ -145,10 +177,14 @@ public void Render_Clear()
     // SearchWords 結束
     SearchWords_Clear();
 
-    // free 暫停文字、背景圖、mapCursor
+    // free 暫停文字、背景圖、mapCursor、hotbar、hotbarCursor、背包、背包cursor
     SDL_DestroyTexture(pauseWord_texture);
     SDL_DestroyTexture(background_texture);
     SDL_DestroyTexture(mapCurosr_texture);
+    SDL_DestroyTexture(hotbar_texture);
+    SDL_DestroyTexture(hotbarCursor_texture);
+    SDL_DestroyTexture(backpack_texture);
+    SDL_DestroyTexture(backpackCursor_texture);
 }
 
 // 畫出背景
@@ -180,8 +216,13 @@ public void Render_RenderBackground()
 public void Render_RenderBackpack()
 {
     // 取得背包位置、大小
-    // SDL_position backpackPos = Backpack_GetPosition();
-    // SDL_size backpackSize = Backpack_GetSize();
+    SDL_position backpackPos = Backpack_GetPosition();
+    SDL_size backpackSize = Backpack_GetSize();
+
+    // 畫出背包
+    SDL_Rect rect = (SDL_Rect){.x = backpackPos.x, .y = backpackPos.y, .w = backpackSize.width, .h = backpackSize.height};
+    SDL_RenderCopy(renderer, backpack_texture, NULL, &rect);
+    
 
     // 還要把方塊畫上去
     // int *textureIDs = TextureBase_GetAllBlock();
@@ -202,8 +243,13 @@ private void Render_RenderBlockInBackpack(SDL_position nowPos, int blockID)
 public void Render_RenderBackpackCursor()
 {
     // 取得 cursor 位置、大小
-    // SDL_position cursorPos = Backpack_GetCursorPosition();
-    // SDL_size cursorSize = Backpack_GetCursorSize();
+    SDL_position cursorPos = Backpack_GetCursorPosition(); 
+    if(cursorPos.x == POS_NOT_EXISTS) return ; // 這代表 cursor 不存在，不用畫
+    SDL_size cursorSize = Backpack_GetCursorSize();
+
+    // 畫出 CURSOR
+    SDL_Rect rect = (SDL_Rect){.x = cursorPos.x, .y = cursorPos.y, .w = cursorSize.width, .h = cursorSize.height};
+    SDL_RenderCopy(renderer, backpackCursor_texture, NULL, &rect);
 }
 
 // 依 camera 差距，畫出地圖
@@ -261,16 +307,46 @@ public void Render_RenderMapCursor()
 public void Render_RenderHotbar()
 {
     // 取得快捷欄位置、大小
-    // SDL_position hotbarPos = Map_GetPosition();
-    // SDL_size hotbarize = Map_GetSize();
+    SDL_position hotbarPos = Hotbar_GetPosition();
+    SDL_size hotbarize = Hotbar_GetSize();
+
+    // 畫出
+    SDL_Rect rect = (SDL_Rect){.x = hotbarPos.x, .y = hotbarPos.y, .w = hotbarize.width, .h = hotbarize.height};
+    SDL_RenderCopy(renderer, hotbar_texture, NULL, &rect);
+
+    // 取得 in cell 方塊資訊
+    SDL_position inCellBlockStartPos = HotBar_GetInCellBlockStartPos();
+    SDL_size inCellBlockSize = HotBar_GetInCellBlockSize();
+    SDL_size cellSize = HotBar_GetCellSize();
+    static short *blockIDArray = NULL; // 要初始化！
+    int totalCellNum;
+    HotBar_GetAllID(&blockIDArray, &totalCellNum);
+
+    // 畫出所有在 快捷欄中的方快
+    rect = (SDL_Rect){.x = inCellBlockStartPos.x, .y = inCellBlockStartPos.y, .w = inCellBlockSize.width, .h = inCellBlockSize.height};
+    for(int i = 0; i < totalCellNum; ++i)
+    {
+        if(blockIDArray[i] != NO_BLOCK_ID)
+        {
+            // 取 Texturew、畫出
+            // SDL_Texture *blockTexture = TetxureBase_GetTexture();
+            SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Grass_Block.png");
+            SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
+        }
+        rect.x += cellSize.width; // 到下一個 cell
+    }
 }
 
 // 畫出快捷欄的 cursor
 public void Render_RenderHotbarCursor()
 {
     // 取得 cursor 位置、大小
-    // SDL_position cursorPos = Map_GetCursorPosition();
-    // SDL_size cursorize = Map_GetCursorSize();
+    SDL_position hotbarCursorPos = Hotbar_GetCursorPosition();
+    SDL_size hotbarCursorSize = HotBar_GetCellSize();
+
+    // 畫出
+    SDL_Rect rect = (SDL_Rect){.x = hotbarCursorPos.x, .y = hotbarCursorPos.y, .w = hotbarCursorSize.width, .h = hotbarCursorSize.height};
+    SDL_RenderCopy(renderer, hotbarCursor_texture, NULL, &rect);
 }
 
 // 畫出已打的字
