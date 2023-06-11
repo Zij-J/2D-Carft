@@ -3,14 +3,16 @@
 #define RENDER
 
 // unfinished
-void Render_RenderBackpack();
-void Render_RenderMapCursor();
-void Render_RenderHotbar();
-void Render_RenderHotbarCursor();
+
 
 // finished
 void Render_Init(SDL_Renderer* rememberedRenderer);
 void Render_Clear();
+void Render_RenderBackpack();
+void Render_RenderBackpackCursor();
+void Render_RenderMapCursor();
+void Render_RenderHotbar();
+void Render_RenderHotbarCursor();
 void Render_RenderBackground();
 void Render_RenderSearchNotify(bool isSuccessSearching);
 void Render_RenderSearchMessage(bool isSuccessSearching);
