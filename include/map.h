@@ -2,7 +2,6 @@
 #ifndef MAP
 #define MAP
 
-#define NO_BLOCK_ID -9 //no block = -9
 
 // finished
 void Map_Init();
