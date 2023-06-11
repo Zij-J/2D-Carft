@@ -157,11 +157,6 @@ struct tNode* find_root(struct tNode *curNode){
     return curNode;
 }
 
-void print_root(struct tNode *curNode){
-    curNode=find_root(curNode);
-    printf("root: %s\n", curNode->blockData->blockName);
-}
-
 int* store_data(struct tNode *curNode){
     int count=0, *block_ID=malloc((node_count+1)*sizeof(int));
     char max_print[50], now_print[49]={0,'\0'};
