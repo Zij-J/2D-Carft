@@ -10,11 +10,11 @@ enum searchNotifyIndex{searchNotifyIndex_success, searchNotifyIndex_failure};
 // unfinished
 void HotBar_Init();
 void HotBar_Clear();
-void HotBar_MoveCursor();
+void HotBar_MoveCursor(SDL_Event event);
 void HotBar_GetAllID();
 short HotBar_GetChosenBlockID();
 void Backpack_MoveCursor(SDL_Event event);
-void Backpack_UpdateBlockToHotbar();
+void Backpack_UpdateBlockToHotbar(SDL_Event event);
 void Backpack_FindBlockAndMoveCursor();
 bool Backpack_isInput(SDL_Event event);
 SDL_position Hotbar_GetPosition();
