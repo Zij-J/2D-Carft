@@ -10,7 +10,6 @@ struct tNode* RBT_init();
 void insert(struct tNode *, blockBase_Data*);
 struct tNode* find(struct tNode*, blockBase_Data*);
 struct tNode* find_root(struct tNode *);
-void print_root(struct tNode *);
 int* store_data(struct tNode *);
 
 #endif
