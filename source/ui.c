@@ -214,7 +214,6 @@ void Backpack_GetSearchNotifyContent(char **array)
     array[searchNotifyIndex_success] = SEARCH_NOTIFY_SUCCESS_WORD;
     array[searchNotifyIndex_failure] = SEARCH_NOTIFY_FAILURE_WORD;
 }
-<<<<<<< HEAD
 
 
 // 回傳 Pause 文字大小
@@ -237,5 +236,3 @@ SDL_Color PauseScreen_GetPauseBackgroundColor()
 {
     return PAUSE_BACKGROUND_COLOR;
 }
-=======
->>>>>>> hyse-pr
