@@ -6,6 +6,11 @@
 // 所有 ui 的位置、大小、顏色資訊都在此
 #define BACKPACK_POSITION (SDL_position){.x = 100, .y = 100} // 背包的預設位置
 #define BACKPACK_SIZE (SDL_size){.height = 100, .width = 100} // 背包的預設大小
+#define HOTBAR_POSITION (SDL_position){.x = 160, .y = 425} // 快捷欄的預設位置
+#define HOTBAR_CELL_SIZE (SDL_size){.height = 40, .width = 40} // 一格快捷欄的預設大小
+#define HOTBAR_MARGIN_SIZE (SDL_size){.height = 9, .width = 9} // 快捷欄格子外面的邊界大小
+#define HOTBAR_CELL_NUM 9 // 快捷鍵有幾格 
+#define HOTBAR_BLOCK_IN_CELL_SIZE (SDL_size){.height = 24, .width = 24} // 一格快捷欄裡面的方塊的預設大小 (位置預設置中，不給調)
 #define SEARCH_WORD_POSITION (SDL_position){.x = 100, .y = 100} // 搜尋文字的預設位置
 #define SEARCH_WORD_SIZE (SDL_size){.height = 100, .width = 100} // 搜尋文字。一個字的預設大小(方形)
 #define SEARCH_WORD_COLOR (SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255} // 搜尋文字的預設顏色
@@ -40,37 +45,73 @@ public void HotBar_Init()
 
     root=malloc(sizeof(node_Hotbar));
     node_Hotbar *curNode=root;
-    for(int i=1; i<9; i++){
+    for(int i=1; i<HOTBAR_CELL_NUM; i++){
         curNode->num_of_Hotbar=i;
-        curNode->BlockID=-9;
+        curNode->BlockID= NO_BLOCK_ID;
+        /*暫用*/if(i == 1 || i == 3) curNode->BlockID= 1;
         curNode->next=malloc(sizeof(node_Hotbar));
         curNode=curNode->next;
     }
-    curNode->num_of_Hotbar=9;
-    curNode->BlockID=-9;
-    curNode->next=root;
+    curNode->num_of_Hotbar=HOTBAR_CELL_NUM;
+    curNode->BlockID=NO_BLOCK_ID;
+    curNode->next=root; // 環狀 linked list!
+
+    // 預設 now 是第一個
+    now = root;
 }
 
-void HotBar_Clear()
+// 清除 hotbar
+public void HotBar_Clear()
 {
-    //? Ans: free linked list用
+    // free linked list用
+    node_Hotbar *curNode = root, *tmpNext;
+    for(int i = 1; i <= HOTBAR_CELL_NUM; ++i)
+    {
+        tmpNext = (*curNode).next;
+        free(curNode);
+        curNode = tmpNext;
+    }
 }
 
-void HotBar_MoveCursor(SDL_Event event)
+// 依輸入移動 HotBar 的 cursor
+public void HotBar_MoveCursor(SDL_Event event)
 {
-    //判斷event (if 鍵盤輸入(或滑鼠滾輪 看你))
-        //修改*now
+    // 判斷event (if 鍵盤輸入(或滑鼠滾輪 看你)) //修改*now
+    if(event.type == SDL_MOUSEWHEEL)
+    {
+        if(event.wheel.y > 0) // scroll up (有往上滾，就上移)
+            now = (*now).next;
+        else if(event.wheel.y < 0) // scroll down (有往下滾，就下移)
+        {
+            for(int i = 0; i < HOTBAR_CELL_NUM -1; ++i) // 就往前總數 -1，就是往後1了
+                now = (*now).next;
+        }
+    }
 }
 
-void HotBar_GetAllID()
+// 把所有 node 存的 BlockID 回傳，用於一次顯示所有 Hotbar 有的方塊 (需準備 buffer，arrayBuffer要初始化至NULL，static者佳)
+void HotBar_GetAllID(short **bufferArray, int *totalIDNumber)
 {
-    //for//取node的ID ??? Ans: 把所有 node 存的 BlockID 回傳，用於一次顯示所有 Hotbar 有的方塊
+   // 幫分配記憶體
+   if(*bufferArray == NULL) 
+        *bufferArray = (short *)malloc((sizeof(short) * HOTBAR_CELL_NUM));
 
+    // 傳ID
+    node_Hotbar *cur = root;
+    for(int i = 0; i < HOTBAR_CELL_NUM; ++i)
+    {
+        (*bufferArray)[i] = (*cur).BlockID;
+        cur = (*cur).next;
+    }
+
+    // 傳總數
+    *totalIDNumber = HOTBAR_CELL_NUM;
 }
 
+// 取得目前選的方塊
 short HotBar_GetChosenBlockID()
 {
-    //return now->BlockID;
+    return now->BlockID;
 }
 
 // 依輸入開關背包
@@ -121,14 +162,46 @@ bool Backpack_isInput(SDL_Event event)
 
 }
 
+// get hotbar左上角座標
 SDL_position Hotbar_GetPosition()
 {
-    //get hotbar左上角座標 ? Ans: 對！要知道 Hotbar 要放在整個畫面的哪裡！所以要回傳在畫面上的絕對座標 (一樣是 左上 (0,0) 右x正 下y正)
+    return HOTBAR_POSITION;
 }
-
+// get 整個 hotbar 大小
+SDL_size Hotbar_GetSize()
+{
+    SDL_size cellSize = HOTBAR_CELL_SIZE;
+    SDL_size marginSize = HOTBAR_MARGIN_SIZE;
+    return (SDL_size){.width = cellSize.width * HOTBAR_CELL_NUM + 2* marginSize.width , .height = cellSize.height + 2* marginSize.height};
+}
+// get hotbarCursor左上角座標
 SDL_position Hotbar_GetCursorPosition()
 {
-    //
+    SDL_position hotbarLeftUpPos = HOTBAR_POSITION;
+    SDL_size cellSize = HOTBAR_CELL_SIZE;
+    SDL_size marginSize = HOTBAR_MARGIN_SIZE;
+    int index = (*now).num_of_Hotbar - 1;
+    return (SDL_position){.x = hotbarLeftUpPos.x + marginSize.width + (index * cellSize.width), .y = hotbarLeftUpPos.y + marginSize.height};
+}
+// get cell 大小 (就是 hotbarCursor 大小 與 Cell方塊之間間隔)
+SDL_size HotBar_GetCellSize()
+{
+    return HOTBAR_CELL_SIZE;
+}
+// get hotbar 內部方塊開始位置 (取置中的左上)
+SDL_position HotBar_GetInCellBlockStartPos()
+{
+    SDL_position hotbarLeftUpPos = HOTBAR_POSITION;
+    SDL_size marginSize = HOTBAR_MARGIN_SIZE;
+    SDL_size cellSize = HOTBAR_CELL_SIZE;
+    SDL_size blockInCellSize = HOTBAR_BLOCK_IN_CELL_SIZE;
+    return (SDL_position){.x = hotbarLeftUpPos.x +marginSize.width +cellSize.width/2 - blockInCellSize.width/2
+                        , .y = hotbarLeftUpPos.y +marginSize.height +cellSize.height/2 - blockInCellSize.height/2};
+}
+// get hotbar 內部方塊大小
+SDL_size HotBar_GetInCellBlockSize()
+{
+    return HOTBAR_BLOCK_IN_CELL_SIZE;
 }
 
 SDL_position Backpack_GetPosition()
@@ -142,16 +215,6 @@ SDL_position Backpack_GetBlockStartPosition()
 }
 
 SDL_position Backpack_GetCursorPosition()
-{
-
-}
-
-SDL_size Hotbar_GetSize()
-{
-    //上面define HOTBAR_SIZE + return
-}
-
-SDL_size HotBar_GetCursorSize()
 {
 
 }

@@ -20,6 +20,9 @@
 #define WINDOWS_NAME "2D-Craft"
 enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
+// 沒有方塊的編號
+#define NO_BLOCK_ID -9 //no block = -9
+
 // 位置資訊，用 x,y 一起比較方便
 struct pos
 {

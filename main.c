@@ -23,7 +23,7 @@ int main(void)
 
     // 資料庫準備初始化 + render 準備
     // TextureBase_Init();
-    // HotBar_Init();
+    HotBar_Init();
     Map_Init();
     Render_Init(renderer);
     
@@ -59,7 +59,7 @@ int main(void)
             // Render_RenderBackpack();
         
             // 移動背包的 cursor、是否有輸入
-            //Backpack_MoveCursor(event);
+            // Backpack_MoveCursor(event);
 
             #if TESTING_BACKPACK_FUNCTIONS
             // 有輸入、再執行背包輸入部分
@@ -109,9 +109,9 @@ int main(void)
         Render_RenderMapCursor();
 
         // 移動、顯示快捷欄
-        // HotBar_MoveCursor();
-        // Render_RenderHotbar();
-        // Render_RenderHotbarCursor();
+        HotBar_MoveCursor(event);
+        Render_RenderHotbar();
+        Render_RenderHotbarCursor();
 
         // 畫出畫面，迴圈結束
         SDL_RenderPresent(renderer);
@@ -120,7 +120,7 @@ int main(void)
     // 結束程式
     Render_Clear();
     Map_Clear();
-    // HotBar_Clear();
+    HotBar_Clear();
     // TextureBase_Clear();
     SDL_EndAll_StopProgram();
 }

@@ -8,28 +8,30 @@ typedef enum {blockArea, searchArea, nothingArea} cursorArea;
 enum searchNotifyIndex{searchNotifyIndex_success, searchNotifyIndex_failure};
 
 // unfinished
-void HotBar_Init();
-void HotBar_Clear();
-void HotBar_MoveCursor(SDL_Event event);
-void HotBar_GetAllID();
-short HotBar_GetChosenBlockID();
 void Backpack_MoveCursor(SDL_Event event);
 void Backpack_UpdateBlockToHotbar(SDL_Event event);
 void Backpack_FindBlockAndMoveCursor();
 bool Backpack_isInput(SDL_Event event);
-SDL_position Hotbar_GetPosition();
-SDL_position Hotbar_GetCursorPosition();
 SDL_position Backpack_GetPosition();
 SDL_position Backpack_GetBlockStartPosition();
 SDL_position Backpack_GetCursorPosition();
-SDL_size Hotbar_GetSize();
-SDL_size HotBar_GetCursorSize();
 SDL_size Backpack_GetSize();
 SDL_size Backpack_GetBlockSize();
 SDL_size Backpack_GetCursorSize();
 cursorArea Backpack_GetCursorOnArea();
 
 // finished
+void HotBar_Init();
+void HotBar_Clear();
+void HotBar_GetAllID(short **bufferArray, int *totalIDNumber);
+short HotBar_GetChosenBlockID();
+SDL_position Hotbar_GetPosition();
+SDL_position Hotbar_GetCursorPosition();
+SDL_size Hotbar_GetSize();
+SDL_size HotBar_GetCellSize();
+SDL_position HotBar_GetInCellBlockStartPos();
+SDL_size HotBar_GetInCellBlockSize();
+void HotBar_MoveCursor(SDL_Event event);
 void Backpack_Switch(SDL_Event event);
 bool Backpack_isOpen();
 SDL_position Backpack_GetSearchWordPosition();
