@@ -1,143 +1,178 @@
-#include "../include/basicSetting.h" // 要用的
-#include "../include/texture.h" // 要用的
+#include "../include/basicSetting.h"
+#include "../include/texture.h"
 #include "../include/RBTree.h"
+#include <string.h>
 
-// RBTree Node
-struct Node {
-    blockBase_Data blockData;
-    struct Node* parent;
-    struct Node* left;
-    struct Node* right;
-    int isRed;
+private struct tNode* create_tNode(blockBase_Data*, struct tNode*, SIDE);
+private void check(struct tNode*);
+private void left_rotate(struct tNode*);
+private void right_rotate(struct tNode*);
+
+int node_count=0;
+
+struct tNode{
+    COLOR color;
+    blockBase_Data *blockData;
+    struct tNode *Lchild;
+    struct tNode *Rchild;
+    struct tNode *parent;
+    SIDE side;//parent's L or R child
 };
 
-// 左旋轉
-void leftRotate(struct Node** root, struct Node* x) {
-    struct Node* y = x->right;
-    x->right = y->left;
-    if (y->left != NULL)
-        y->left->parent = x;
-    y->parent = x->parent;
-    if (x->parent == NULL)
-        *root = y;
-    else if (x == x->parent->left)
-        x->parent->left = y;
-    else
-        x->parent->right = y;
-    y->left = x;
-    x->parent = y;
+private struct tNode* create_tNode(blockBase_Data *blockData, struct tNode* Parent, SIDE side){
+    //P;
+    struct tNode* n=malloc(sizeof(struct tNode));
+    n->color= RED, n->blockData=blockData, n->Lchild= NULL;
+    n->Rchild= NULL, n->parent= Parent, n->side= side;
+    return n;
 }
 
-// 右旋轉
-void rightRotate(struct Node** root, struct Node* x) {
-    struct Node* y = x->left;
-    x->left = y->right;
-    if (y->right != NULL)
-        y->right->parent = x;
-    y->parent = x->parent;
-    if (x->parent == NULL)
-        *root = y;
-    else if (x == x->parent->right)
-        x->parent->right = y;
-    else
-        x->parent->left = y;
-    y->right = x;
-    x->parent = y;
+struct tNode* RBT_init(){
+    struct tNode *root=create_tNode(NULL, NULL, NONE);
+    root->color=BLACK;
+    return root;
 }
 
-// 修復RBTree after insertion
-void fixInsert(struct Node** root, struct Node* z) {
-    while (z->parent != NULL && z->parent->isRed) {
-        if (z->parent == z->parent->parent->left) {
-            struct Node* y = z->parent->parent->right;
-            if (y != NULL && y->isRed) {
-                z->parent->isRed = 0;
-                y->isRed = 0;
-                z->parent->parent->isRed = 1;
-                z = z->parent->parent;
-            } else {
-                if (z == z->parent->right) {
-                    z = z->parent;
-                    leftRotate(root, z);
-                }
-                z->parent->isRed = 0;
-                z->parent->parent->isRed = 1;
-                rightRotate(root, z->parent->parent);
+void insert(struct tNode *curNode, blockBase_Data *blockData) {
+    if(curNode->blockData != NULL && curNode->blockData->blockName != NULL){
+        if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return;
+        else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0){
+            if(curNode->Lchild==NULL){
+                curNode->Lchild= create_tNode(blockData, curNode, LEFT);
+                node_count++;
+                check(curNode->Lchild);
             }
-        } else {
-            struct Node* y = z->parent->parent->left;
-            if (y != NULL && y->isRed) {
-                z->parent->isRed = 0;
-                y->isRed = 0;
-                z->parent->parent->isRed = 1;
-                z = z->parent->parent;
-            } else {
-                if (z == z->parent->left) {
-                    z = z->parent;
-                    rightRotate(root, z);
-                }
-                z->parent->isRed = 0;
-                z->parent->parent->isRed = 1;
-                leftRotate(root, z->parent->parent);
+            else insert(curNode->Lchild, blockData);
+        }
+        else{
+            if(curNode->Rchild==NULL){
+                curNode->Rchild= create_tNode(blockData, curNode, RIGHT);
+                node_count++;
+                check(curNode->Rchild);
+            }
+            else insert(curNode->Rchild, blockData);
+        }
+    }
+    else{
+        curNode->blockData=blockData;
+        node_count++;
+        return;
+    }
+}
+
+struct tNode* find(struct tNode *curNode, blockBase_Data *blockData){
+    if(curNode==NULL) return NULL;
+    if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return curNode;
+    else if(strcmp(blockData->blockName, curNode->blockData->blockName)>0) find(curNode->Rchild, blockData);
+    else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0) find(curNode->Lchild, blockData);
+}
+
+private void check(struct tNode *curNode){
+    if(curNode->parent==NULL){
+        curNode->color=BLACK, curNode->side=NONE;
+        return;
+    }
+    if(curNode->parent->color==RED){
+        if(curNode->parent->side==LEFT && curNode->parent->parent->Rchild!=NULL && curNode->parent->parent->Rchild->color==RED){
+            curNode->parent->color=BLACK;
+            curNode->parent->parent->color=RED;
+            curNode->parent->parent->Rchild->color=BLACK;
+            check(curNode->parent->parent);
+        }
+        else if(curNode->parent->side==RIGHT && curNode->parent->parent->Lchild!=NULL && curNode->parent->parent->Lchild->color==RED){
+            curNode->parent->color=BLACK;
+            curNode->parent->parent->color=RED;
+            curNode->parent->parent->Lchild->color=BLACK;
+            check(curNode->parent->parent);
+        }
+        else if(curNode->side==LEFT){
+            if(curNode->parent->side==LEFT) right_rotate(curNode->parent->parent);
+            else{
+                curNode=curNode->parent;
+                right_rotate(curNode);
+                check(curNode);
+            }
+        }
+        else{
+            if(curNode->parent->side==RIGHT) left_rotate(curNode->parent->parent);
+            else{
+                curNode=curNode->parent;
+                left_rotate(curNode);
+                check(curNode);
             }
         }
     }
-    (*root)->isRed = 0;
 }
 
-// 插入節點
-void insertNode(struct Node** root, blockBase_Data blockData) {
-    struct Node* z = (struct Node*)malloc(sizeof(struct Node));
-    z->blockData = blockData;
-    z->left = NULL;
-    z->right = NULL;
-    z->isRed = 1;
-
-    struct Node* x = NULL;
-    struct Node* y = *root;   
-
-    while (y != NULL) {
-        x = y;
-        if (z->blockData.blockID < y->blockData.blockID)
-            y = y->left;
-        else
-            y = y->right;
+private void left_rotate(struct tNode *curNode){
+    //swap color
+    COLOR c=curNode->color;
+    curNode->color=curNode->Rchild->color;
+    curNode->Rchild->color=c;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Rchild;
+        else curNode->parent->Rchild=curNode->Rchild;
     }
-
-    z->parent = x;
-    if (x == NULL)
-        *root = z;
-    else if (z->blockData.blockID < x->blockData.blockID)
-        x->left = z;
-    else
-        x->right = z;
-
-    fixInsert(root, z);
-}
-
-// 將RBTree 轉換成陣列
-void treeToArray(struct Node* node, blockBase_Data* array, int* index) {
-    if (node != NULL) {
-        treeToArray(node->left, array, index);
-        array[*index] = node->blockData;
-        (*index)++;
-        treeToArray(node->right, array, index);
+    //update side
+    curNode->Rchild->side=curNode->side;
+    curNode->side=LEFT;
+    //change relation
+    curNode->Rchild->parent=curNode->parent;
+    curNode->parent=curNode->Rchild;
+    curNode->Rchild=curNode->parent->Lchild;
+    if(curNode->Rchild!=NULL){
+        curNode->Rchild->parent=curNode;
+        curNode->Rchild->side=RIGHT;
     }
+    curNode->parent->Lchild=curNode;
 }
 
-// 使用RBTree進行排序
-void sortArray(storedBlock_DataBase* IDtoNameBase) {
-    struct Node* root = NULL;
-
-    for (int i = 0; i < (*IDtoNameBase)->storedSize; ++i) {
-        insertNode(&root, (*IDtoNameBase)->array[i]);
+private void right_rotate(struct tNode *curNode){
+    //swap color
+    COLOR c=curNode->color;
+    curNode->color=curNode->Lchild->color;
+    curNode->Lchild->color=c;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Lchild;
+        else curNode->parent->Rchild=curNode->Lchild;
     }
-    
-    int index = 0;
-    treeToArray(root, (*IDtoNameBase)->array, &index);
-    
-    freeTree(root);
+    //update side
+    curNode->Lchild->side=curNode->side;
+    curNode->side=RIGHT;
+    //change relation
+    curNode->Lchild->parent=curNode->parent;
+    curNode->parent=curNode->Lchild;
+    curNode->Lchild=curNode->parent->Rchild;
+    if(curNode->Lchild!=NULL){
+        curNode->Lchild->parent=curNode;
+        curNode->Lchild->side=LEFT;
+    }
+    curNode->parent->Rchild=curNode;
 }
 
+struct tNode* find_root(struct tNode *curNode){
+    while(curNode->parent!=NULL) curNode=curNode->parent;
+    return curNode;
+}
 
-
+int* store_data(struct tNode *curNode){
+    int count=0, *block_ID=malloc((node_count+1)*sizeof(int));
+    char max_print[50], now_print[49]={0,'\0'};
+    struct tNode* M=find_root(curNode);
+    curNode=M;
+    while(M->Rchild!=NULL) M=M->Rchild;
+    strcpy(max_print, M->blockData->blockName);
+    while(strcmp(now_print, max_print)<0){
+        if(curNode->Lchild!=NULL && strcmp(curNode->Lchild->blockData->blockName, now_print)>0) curNode=curNode->Lchild;
+        else if(strcmp(curNode->blockData->blockName, now_print)>0){
+            strcpy(now_print, curNode->blockData->blockName);
+            *(block_ID+(count++))=curNode->blockData->blockID;
+        }
+        else if(curNode->Rchild!=NULL && strcmp(curNode->Rchild->blockData->blockName, now_print)>0) curNode=curNode->Rchild;
+        else curNode=curNode->parent;
+    }
+    *(block_ID+count)=-1;//stop
+    return block_ID;
+}
