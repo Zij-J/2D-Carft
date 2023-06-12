@@ -8,34 +8,37 @@
 #include <io.h>
 
 #define INIT_ARRAY_SIZE 100
-#define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
+#define MAX_ABBSOULTE_PATH_LENGTH 255 // 4096 這是 UNIX 絕對路徑最大值，Windows 只有 255
 
-/*
-struct blockDataBase_Texture
-{
-    int blockID;
-    char *blockName;
-    SDL_Texture *blockTexture;
-    struct blockDataBase_Texture *next;    
-};
-typedef struct blockDataBase_Texture blockBase_Data;
-*/
-
-struct storedBlockArrayStruct
-{
-    blockBase_Data *array;
-    int storedSize;
-    int maxSize;
-    blockBase_Data *head;
-};
-typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
-typedef storedBlock_ArrayAndSize *storedBlock_DataBase;
 // 創立 方塊(材質資料庫) 、 ID對應名字資料庫
 storedBlock_DataBase storedBlock_ArrayRecord;
 storedBlock_DataBase IDtoNameBase = NULL; // 要預設沒東西，表示有需要 + 不存在 才 init 用
 
 // 記住 TextureBase_isFindBlockBySearchWords()，找到的ID
 short searchedBlockID = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
+
+//RBTree
+typedef enum {BLACK, RED} COLOR;//node color
+typedef enum {NONE, LEFT, RIGHT} SIDE;//parent's L or R child
+
+struct tNode{
+    COLOR color;
+    blockBase_Data *blockData;
+    struct tNode *Lchild;
+    struct tNode *Rchild;
+    struct tNode *parent;
+    SIDE side;//parent's L or R child
+}*root;
+
+struct tNode* RBT_init();//initiallize
+void insert(struct tNode *, blockBase_Data*);//insert the node to red black tree
+struct tNode* find(struct tNode*, blockBase_Data*);//find node by block's name
+struct tNode* find_root(struct tNode *);//find red black tree root
+int* store_data(struct tNode *);//store blockID to array
+private struct tNode* create_tNode(blockBase_Data*, struct tNode*, SIDE);
+private void check(struct tNode*);
+private void left_rotate(struct tNode*);
+private void right_rotate(struct tNode*);
 
 // 取得圖片資料夾路徑
 private char *getPictureFolderPath()
@@ -134,6 +137,10 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
         storedBlock_ArrayRecord->array[index].blockID = index;//索引為方塊編號
         storedBlock_ArrayRecord->array[index].blockTexture = texture;
         storedBlock_ArrayRecord->array[index].next = NULL;
+
+        //RBTree
+        insert(root, &storedBlock_ArrayRecord->array[index]);
+        
         index++;
 
         if (index >= storedBlock_ArrayRecord->maxSize)
@@ -161,6 +168,9 @@ public void TextureBase_Init(SDL_Renderer *renderer)
 
     // 取得資料夾路徑
     char *blockFolderPath = getPictureFolderPath();
+
+    //RBTree
+    root=RBT_init();
 
     // 從圖片資料夾開啟方塊
     TextureBase_GetAllBlock(blockFolderPath, renderer);
@@ -209,6 +219,27 @@ public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
     }
     return NULL;
 } 
+
+
+// 依編號取得圖片
+SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
+{
+    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    {
+        if (storedBlock_ArrayRecord->array[i].blockID == blockID)
+            return storedBlock_ArrayRecord->array[i].blockTexture;
+    }
+    
+    blockBase_Data* current = storedBlock_ArrayRecord->head;
+    while (current != NULL)
+    {
+        if (current->blockID == blockID)
+            return current->blockTexture;
+        current = current->next;
+    }
+    
+    return NULL;
+}
 
 //刪除指定圖片 (似乎不用用到！但應該很好用！)
 public void TextureBase_DeleteTexture(const char* textureName) // unused
@@ -306,6 +337,7 @@ public bool TextureBase_isFindBlockBySearchWords()
     // 取得搜尋文字
     char* textureName = SearchWords_GetSearchingWords();
 
+    /*
     // 比較
     for (int i = 0; i < IDtoNameBase->storedSize; ++i)
     {
@@ -324,6 +356,14 @@ public bool TextureBase_isFindBlockBySearchWords()
         current = current->next;
     }
     return false;
+    */
+    blockBase_Data tmp = {.blockName=textureName};
+    struct tNode* ifexist = find(root, &tmp);
+    if(ifexist==NULL) return false;
+    else{
+        searchedBlockID = ifexist->blockData->blockID;
+        return true;
+    }
 } 
 
 // 把搜尋到的方塊編號回傳
@@ -370,4 +410,165 @@ void IDtoNameBase_SortBaseByID()
             }
         }
     }
+}
+
+//RBTree
+int node_count=0;
+
+private struct tNode* create_tNode(blockBase_Data *blockData, struct tNode* Parent, SIDE side){
+    //P;
+    struct tNode* n=malloc(sizeof(struct tNode));
+    n->color= RED, n->blockData=blockData, n->Lchild= NULL;
+    n->Rchild= NULL, n->parent= Parent, n->side= side;
+    return n;
+}
+
+struct tNode* RBT_init(){
+    struct tNode *root=create_tNode(NULL, NULL, NONE);
+    root->color=BLACK;
+    return root;
+}
+
+void insert(struct tNode *curNode, blockBase_Data *blockData) {
+    if(curNode->blockData != NULL && curNode->blockData->blockName != NULL){
+        if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return;
+        else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0){
+            if(curNode->Lchild==NULL){
+                curNode->Lchild= create_tNode(blockData, curNode, LEFT);
+                node_count++;
+                check(curNode->Lchild);
+            }
+            else insert(curNode->Lchild, blockData);
+        }
+        else{
+            if(curNode->Rchild==NULL){
+                curNode->Rchild= create_tNode(blockData, curNode, RIGHT);
+                node_count++;
+                check(curNode->Rchild);
+            }
+            else insert(curNode->Rchild, blockData);
+        }
+    }
+    else{
+        curNode->blockData=blockData;
+        node_count++;
+        return;
+    }
+}
+
+struct tNode* find(struct tNode *curNode, blockBase_Data *blockData){
+    if(curNode==NULL) return NULL;
+    if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return curNode;
+    else if(strcmp(blockData->blockName, curNode->blockData->blockName)>0) find(curNode->Rchild, blockData);
+    else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0) find(curNode->Lchild, blockData);
+}
+
+private void check(struct tNode *curNode){
+    if(curNode->parent==NULL){
+        curNode->color=BLACK, curNode->side=NONE;
+        return;
+    }
+    if(curNode->parent->color==RED){
+        if(curNode->parent->side==LEFT && curNode->parent->parent->Rchild!=NULL && curNode->parent->parent->Rchild->color==RED){
+            curNode->parent->color=BLACK;
+            curNode->parent->parent->color=RED;
+            curNode->parent->parent->Rchild->color=BLACK;
+            check(curNode->parent->parent);
+        }
+        else if(curNode->parent->side==RIGHT && curNode->parent->parent->Lchild!=NULL && curNode->parent->parent->Lchild->color==RED){
+            curNode->parent->color=BLACK;
+            curNode->parent->parent->color=RED;
+            curNode->parent->parent->Lchild->color=BLACK;
+            check(curNode->parent->parent);
+        }
+        else if(curNode->side==LEFT){
+            if(curNode->parent->side==LEFT) right_rotate(curNode->parent->parent);
+            else{
+                curNode=curNode->parent;
+                right_rotate(curNode);
+                check(curNode);
+            }
+        }
+        else{
+            if(curNode->parent->side==RIGHT) left_rotate(curNode->parent->parent);
+            else{
+                curNode=curNode->parent;
+                left_rotate(curNode);
+                check(curNode);
+            }
+        }
+    }
+}
+
+private void left_rotate(struct tNode *curNode){
+    //swap color
+    COLOR c=curNode->color;
+    curNode->color=curNode->Rchild->color;
+    curNode->Rchild->color=c;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Rchild;
+        else curNode->parent->Rchild=curNode->Rchild;
+    }
+    //update side
+    curNode->Rchild->side=curNode->side;
+    curNode->side=LEFT;
+    //change relation
+    curNode->Rchild->parent=curNode->parent;
+    curNode->parent=curNode->Rchild;
+    curNode->Rchild=curNode->parent->Lchild;
+    if(curNode->Rchild!=NULL){
+        curNode->Rchild->parent=curNode;
+        curNode->Rchild->side=RIGHT;
+    }
+    curNode->parent->Lchild=curNode;
+}
+
+private void right_rotate(struct tNode *curNode){
+    //swap color
+    COLOR c=curNode->color;
+    curNode->color=curNode->Lchild->color;
+    curNode->Lchild->color=c;
+    //change relation
+    if(curNode->parent!=NULL){
+        if(curNode->side==LEFT) curNode->parent->Lchild=curNode->Lchild;
+        else curNode->parent->Rchild=curNode->Lchild;
+    }
+    //update side
+    curNode->Lchild->side=curNode->side;
+    curNode->side=RIGHT;
+    //change relation
+    curNode->Lchild->parent=curNode->parent;
+    curNode->parent=curNode->Lchild;
+    curNode->Lchild=curNode->parent->Rchild;
+    if(curNode->Lchild!=NULL){
+        curNode->Lchild->parent=curNode;
+        curNode->Lchild->side=LEFT;
+    }
+    curNode->parent->Rchild=curNode;
+}
+
+struct tNode* find_root(struct tNode *curNode){
+    while(curNode->parent!=NULL) curNode=curNode->parent;
+    return curNode;
+}
+
+int* store_data(struct tNode *curNode){
+    int count=0, *block_ID=malloc((node_count+1)*sizeof(int));
+    char max_print[50], now_print[49]={0,'\0'};
+    struct tNode* M=find_root(curNode);
+    curNode=M;
+    while(M->Rchild!=NULL) M=M->Rchild;
+    strcpy(max_print, M->blockData->blockName);
+    while(strcmp(now_print, max_print)<0){
+        if(curNode->Lchild!=NULL && strcmp(curNode->Lchild->blockData->blockName, now_print)>0) curNode=curNode->Lchild;
+        else if(strcmp(curNode->blockData->blockName, now_print)>0){
+            strcpy(now_print, curNode->blockData->blockName);
+            *(block_ID+(count++))=curNode->blockData->blockID;
+        }
+        else if(curNode->Rchild!=NULL && strcmp(curNode->Rchild->blockData->blockName, now_print)>0) curNode=curNode->Rchild;
+        else curNode=curNode->parent;
+    }
+    *(block_ID+count)=-1;//stop
+    return block_ID;
 }
