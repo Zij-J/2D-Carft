@@ -208,6 +208,27 @@ public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
     return NULL;
 } 
 
+
+// 依編號取得圖片
+SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
+{
+    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    {
+        if (storedBlock_ArrayRecord->array[i].blockID == blockID)
+            return storedBlock_ArrayRecord->array[i].blockTexture;
+    }
+    
+    blockBase_Data* current = storedBlock_ArrayRecord->head;
+    while (current != NULL)
+    {
+        if (current->blockID == blockID)
+            return current->blockTexture;
+        current = current->next;
+    }
+    
+    return NULL;
+}
+
 //刪除指定圖片 (似乎不用用到！但應該很好用！)
 public void TextureBase_DeleteTexture(const char* textureName) // unused
 {
