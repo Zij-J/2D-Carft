@@ -1,11 +1,14 @@
 /* 材質(背包)資料庫(紅黑樹？)、Sort、Search 與 相關function (file I/O：編號對應材質名 file、圖片資料夾)*/
 #include "../include/basicSetting.h" // 要用的
+#include "../include/render.h" // 要用的
 #include "../include/texture.h" // 要放的
 #include <string.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <io.h>
 
 #define INIT_ARRAY_SIZE 100
+#define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
 
 struct blockDataBase_Texture
 {
@@ -25,47 +28,24 @@ struct storedBlockArrayStruct
 };
 typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
 typedef storedBlock_ArrayAndSize *storedBlock_DataBase;
+// 創立 方塊(材質資料庫) 、 ID對應名字資料庫
+storedBlock_DataBase storedBlock_ArrayRecord;
+storedBlock_DataBase IDtoNameBase = NULL; // 要預設沒東西，表示有需要 + 不存在 才 init 用
 
+// 記住 TextureBase_isFindBlockBySearchWords()，找到的ID
+short searchedBlockID = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
 
-// 初始化資料庫
-void TextureBase_Init(storedBlock_DataBase* storedBlock_ArrayRecord)
+// 取得圖片資料夾路徑
+private char *getPictureFolderPath()
 {
-    (*storedBlock_ArrayRecord) = (storedBlock_ArrayAndSize*)malloc(sizeof(storedBlock_ArrayAndSize));
-    (*storedBlock_ArrayRecord)->array = (blockBase_Data*)malloc(sizeof(blockBase_Data) * INIT_ARRAY_SIZE);    
-    (*storedBlock_ArrayRecord)->array->blockName = NULL;    
-    (*storedBlock_ArrayRecord)->storedSize = 0;
-    (*storedBlock_ArrayRecord)->maxSize = INIT_ARRAY_SIZE;
-    (*storedBlock_ArrayRecord)->head = NULL;
-}
-
-// 清除資料庫
-void TextureBase_Clear(storedBlock_DataBase storedBlock_ArrayRecord)
-{    
-    blockBase_Data* current = storedBlock_ArrayRecord->head;
-    while (current != NULL)
-    {
-        blockBase_Data* nextBlock = current->next;
-        SDL_DestroyTexture(current->blockTexture);       
-        free(current->blockName);
-        free(current);
-        current = nextBlock;
-    }
-
-    storedBlock_ArrayRecord = NULL;
-    storedBlock_ArrayRecord->storedSize = 0;
-    storedBlock_ArrayRecord->maxSize = 0;
-    free(storedBlock_ArrayRecord->array);
-    free(storedBlock_ArrayRecord);
-
-    for(int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
-    {
-        SDL_Texture *nowBlockTexture = storedBlock_ArrayRecord->array[i].blockTexture;
-        SDL_DestroyTexture(nowBlockTexture);
-    }    
+    char buffer[MAX_ABBSOULTE_PATH_LENGTH];
+    getcwd(buffer, sizeof(buffer)); // 取得目前工作目錄
+    strcat(buffer, "/block_pictures/"); // 接到 block_pictures 資料夾裡，就完成
+    return strdup(buffer);
 }
 
 //複製資料夾方塊名稱
-char* duplicateString(const char* str)
+private char* duplicateString(const char* str)
 {
     size_t length = strlen(str);
     char* duplicate = (char*)malloc(length + 1); 
@@ -77,19 +57,42 @@ char* duplicateString(const char* str)
 }
 
 // 按方塊名稱進行排序的比較
-int compareTextures(const void* a, const void* b)
+private int compareTextures(const void* a, const void* b)
 {
     const blockBase_Data* textureA = (const blockBase_Data*)a;
     const blockBase_Data* textureB = (const blockBase_Data*)b;
     return strcmp(textureA->blockName, textureB->blockName);
 }
 
+// 載入圖片資料夾圖片 (load 一次，之後要顯示圖片時只要存資料庫抓，不用再load)
+private SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
+{
+    // Load the image as a surface
+    SDL_Surface *surface = IMG_Load(filePath);
+    if (!surface)
+    {
+        fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
+        return NULL;
+    }
+
+    // Create a texture from the surface
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!texture)
+    {
+        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
+    }
+
+    SDL_FreeSurface(surface);
+
+    return texture;
+}
+
 //從圖片資料夾匯入圖片並依名稱排序
-void TextureBase_GetAllBlock(storedBlock_DataBase storedBlock_ArrayRecord, const char *folderPath, SDL_Window *window, SDL_Renderer *renderer)
+private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *renderer)
 {
     DIR *dir;
     struct dirent *entry;
-    char filePath[256];
+    char filePath[MAX_ABBSOULTE_PATH_LENGTH];
 
     dir = opendir(folderPath);
     if (dir == NULL)
@@ -113,22 +116,10 @@ void TextureBase_GetAllBlock(storedBlock_DataBase storedBlock_ArrayRecord, const
         // Construct the full file path
         snprintf(filePath, sizeof(filePath), "%s/%s", folderPath, entry->d_name);
 
-        // Load the image as a surface
-        SDL_Surface *surface = IMG_Load(filePath);
-        if (!surface)
-        {
-            fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
-            continue;
-        }
-
-        // Create a texture from the surface
-        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        // load Texture 應該是在這裡？
+        SDL_Texture *texture = loadTexture(filePath, renderer);
         if (!texture)
-        {
-            fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
-            SDL_FreeSurface(surface);
             continue;
-        }
 
         // Extract the file name without extension
         char *fileName = entry->d_name;
@@ -156,31 +147,51 @@ void TextureBase_GetAllBlock(storedBlock_DataBase storedBlock_ArrayRecord, const
     closedir(dir);
 }
 
-// 載入圖片資料夾圖片
-SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
+// 初始化資料庫
+public void TextureBase_Init(SDL_Renderer *renderer)
 {
-    // Load the image as a surface
-    SDL_Surface *surface = IMG_Load(filePath);
-    if (!surface)
-    {
-        fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
-        return NULL;
-    }
+    // 資料庫初始化
+    storedBlock_ArrayRecord = (storedBlock_ArrayAndSize*)malloc(sizeof(storedBlock_ArrayAndSize));
+    storedBlock_ArrayRecord->array = (blockBase_Data*)calloc(INIT_ARRAY_SIZE, sizeof(blockBase_Data)); // 這樣就有 (storedBlock_ArrayRecord->array[i]).blockName = NULL; 效果(i = 0 到 INIT_ARRAY_SIZE)
+    storedBlock_ArrayRecord->storedSize = 0;
+    storedBlock_ArrayRecord->maxSize = INIT_ARRAY_SIZE;
+    storedBlock_ArrayRecord->head = NULL;
 
-    // Create a texture from the surface
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture)
-    {
-        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
-    }
+    // 取得資料夾路徑
+    char *blockFolderPath = getPictureFolderPath();
 
-    SDL_FreeSurface(surface);
-
-    return texture;
+    // 從圖片資料夾開啟方塊
+    TextureBase_GetAllBlock(blockFolderPath, renderer);
 }
 
-// 依方塊名稱取得圖片
-SDL_Texture *TextureBase_GetTextureName(storedBlock_DataBase storedBlock_ArrayRecord, char* textureName)
+// 清除資料庫
+public void TextureBase_Clear()
+{    
+    blockBase_Data* current = storedBlock_ArrayRecord->head;
+    while (current != NULL)
+    {
+        blockBase_Data* nextBlock = current->next;
+        SDL_DestroyTexture(current->blockTexture);       
+        free(current->blockName);
+        free(current);
+        current = nextBlock;
+    }
+
+    storedBlock_ArrayRecord = NULL;
+    storedBlock_ArrayRecord->storedSize = 0;
+    storedBlock_ArrayRecord->maxSize = 0;
+    free(storedBlock_ArrayRecord->array);
+    free(storedBlock_ArrayRecord);
+
+    for(int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    {
+        SDL_Texture *nowBlockTexture = storedBlock_ArrayRecord->array[i].blockTexture;
+        SDL_DestroyTexture(nowBlockTexture);
+    }    
+}
+
+// 依方塊名稱取得圖片 (似乎不用用到，我們都是用編號取，但應該很好用！)
+public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
 {
     for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
@@ -196,6 +207,7 @@ SDL_Texture *TextureBase_GetTextureName(storedBlock_DataBase storedBlock_ArrayRe
     }
     return NULL;
 } 
+
 
 // 依編號取得圖片
 SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
@@ -217,8 +229,8 @@ SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRe
     return NULL;
 }
 
-//刪除指定圖片
-void TextureBase_DeleteTexture(storedBlock_DataBase storedBlock_ArrayRecord, const char* textureName)
+//刪除指定圖片 (似乎不用用到！但應該很好用！)
+public void TextureBase_DeleteTexture(const char* textureName) // unused
 {
     // 搜尋欲刪除方塊名稱
     int index = -1;
@@ -247,39 +259,47 @@ void TextureBase_DeleteTexture(storedBlock_DataBase storedBlock_ArrayRecord, con
 }
 
 // 匯入編號對應材質名字 file
-void IDtoNameBase_Init(storedBlock_DataBase* IDtoNameBase, storedBlock_DataBase storedBlock_ArrayRecord)
+public void IDtoNameBase_Init()
 {
-    *IDtoNameBase = (storedBlock_ArrayAndSize*)malloc(sizeof(storedBlock_ArrayAndSize));
-    (*IDtoNameBase)->array = (blockBase_Data*)malloc(sizeof(blockBase_Data) * INIT_ARRAY_SIZE);
-    (*IDtoNameBase)->storedSize = storedBlock_ArrayRecord->storedSize;
-    (*IDtoNameBase)->head = NULL;
-
+    IDtoNameBase = (storedBlock_ArrayAndSize*)malloc(sizeof(storedBlock_ArrayAndSize));
+    IDtoNameBase->array = (blockBase_Data*)malloc(sizeof(blockBase_Data) * INIT_ARRAY_SIZE);
+    IDtoNameBase->storedSize = storedBlock_ArrayRecord->storedSize;
+    IDtoNameBase->head = NULL;
+    
+    blockBase_Data* currentNode = NULL; // 要把array轉乘linked list? 可能要記住 舊node
     for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
         blockBase_Data* newData = &(storedBlock_ArrayRecord->array[i]);
-        (*IDtoNameBase)->array[i].blockID = newData->blockID;
-        (*IDtoNameBase)->array[i].blockName = strdup(newData->blockName);
-        (*IDtoNameBase)->array[i].blockTexture = newData->blockTexture;
-
-        if ((*IDtoNameBase)->head == NULL)
+        // array 儲存部分
+        IDtoNameBase->array[i].blockID = newData->blockID;
+        IDtoNameBase->array[i].blockName = strdup(newData->blockName);
+        IDtoNameBase->array[i].blockTexture = newData->blockTexture;
+        // 要把array轉乘linked list? 可能要創 新node，做以下增加
+        blockBase_Data* newDataNode = (blockBase_Data *)malloc(sizeof(blockBase_Data)); 
+        newDataNode->blockID = newData->blockID;
+        newDataNode->blockName = strdup(newData->blockName);
+        newDataNode->blockTexture = newData->blockTexture;
+         
+        if (IDtoNameBase->head == NULL)
         {
-            (*IDtoNameBase)->head = &((*IDtoNameBase)->array[i]);
-            (*IDtoNameBase)->array[i].next = NULL;
+            IDtoNameBase->head = newDataNode;
+            newDataNode->next = NULL;
+            currentNode = newDataNode; // 要把array轉乘linked list? 可能要記住 舊node
         }
         else
         {
-            (*IDtoNameBase)->array[i].next = (*IDtoNameBase)->head;
-            (*IDtoNameBase)->head = &((*IDtoNameBase)->array[i]);
+            newDataNode->next = currentNode->next;
+            currentNode->next = newDataNode;
         }
     }
 }
 
 // 清除編號對應材質名字 file
-void IDtoNameBase_Clear(storedBlock_DataBase* IDtoNameBase)
+public void IDtoNameBase_Clear()
 {
-    if (*IDtoNameBase != NULL)
+    if (IDtoNameBase != NULL)
     {
-        blockBase_Data* current = (*IDtoNameBase)->head;
+        blockBase_Data* current = IDtoNameBase->head;
         while (current != NULL)
         {
             blockBase_Data* temp = current;
@@ -287,34 +307,35 @@ void IDtoNameBase_Clear(storedBlock_DataBase* IDtoNameBase)
             free(temp->blockName);
             SDL_DestroyTexture(temp->blockTexture);
             free(temp);
-        }          
-        free((*IDtoNameBase)->array);
-        free(*IDtoNameBase);
-        *IDtoNameBase = NULL;
+        }         
+        free(IDtoNameBase->array);
+        free(IDtoNameBase);
+        IDtoNameBase = NULL;
     }      
+    
 }
-
-// 取得材質資料庫所有的材質ID 
-short int * TextureBase_GetAllID(const storedBlock_DataBase* IDtoNameBase)
-{
-    short* materialID = (short*)malloc(sizeof(short) * (*IDtoNameBase)->storedSize);
-    for (int i = 0; i < (*IDtoNameBase)->storedSize; ++i)
-    {
-        materialID[i] = (*IDtoNameBase)->array[i].blockID;
-    }
-    return materialID;
-}
-
 
 // 依搜尋文字，找找看是否有方塊是此名字，回傳是否找到
-bool TextureBase_isFindBlockBySearchWords(storedBlock_DataBase* IDtoNameBase, char* textureName)
+public bool TextureBase_isFindBlockBySearchWords()
 {
-    for (int i = 0; i < (*IDtoNameBase)->storedSize; ++i)
+    // 有需要 + 不存在，才要匯入ID到方塊資料庫
+    if(IDtoNameBase == NULL)
+        IDtoNameBase_Init();
+
+    // 取得搜尋文字
+    char* textureName = SearchWords_GetSearchingWords();
+
+    // 比較
+    for (int i = 0; i < IDtoNameBase->storedSize; ++i)
     {
-        if (strcmp((*IDtoNameBase)->array[i].blockName, textureName) == 0)
+        if (strcmp(IDtoNameBase->array[i].blockName, textureName) == 0)
+        {
+            searchedBlockID = IDtoNameBase->array[i].blockID; // 在這邊記住 ID 就不用再找一次！
             return true;
+        }
+            
     }
-    blockBase_Data* current = (*IDtoNameBase)->head;
+    blockBase_Data* current = IDtoNameBase->head;
     while (current != NULL)
     {
         if (strcmp(current->blockName, textureName) == 0)
@@ -325,40 +346,46 @@ bool TextureBase_isFindBlockBySearchWords(storedBlock_DataBase* IDtoNameBase, ch
 } 
 
 // 把搜尋到的方塊編號回傳
-short TextureBase_GetSearchedBlockID(storedBlock_DataBase* IDtoNameBase, char* textureName)
+public short TextureBase_GetSearchedBlockID()
 {
-    for (int i = 0; i < (*IDtoNameBase)->storedSize; ++i)
-    {
-        if (strcmp((*IDtoNameBase)->array[i].blockName, textureName) == 0)
-            return (*IDtoNameBase)->array[i].blockID;
-    }
-    
-    blockBase_Data* current = (*IDtoNameBase)->head;
-    while (current != NULL)
-    {
-        if (strcmp(current->blockName, textureName) == 0)
-            return current->blockID;
-        current = current->next;
-    }
-    
     // Return -1 if the block is not found
-    return -1;
+    if(searchedBlockID == EOF)
+        return -1;
+    // 回傳ID
+    else
+    {
+        short retrunID = searchedBlockID;
+        searchedBlockID = EOF;
+        IDtoNameBase_Clear();
+        return retrunID;
+    }
 }
 
-//依照方塊編號大小排序資料庫
-SDL_Texture *TextureBase_GetTextureID(storedBlock_DataBase* IDtoNameBase)
+// 取得材質資料庫所有的材質ID 
+public short *TextureBase_GetAllID()
+{
+    short* materialID = (short*)malloc(sizeof(short) * storedBlock_ArrayRecord->storedSize);
+    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    {
+        materialID[i] = storedBlock_ArrayRecord->array[i].blockID;
+    }
+    return materialID;
+}
+
+//依照方塊編號大小排序資料庫 // (似乎不用用到，但應該很好用！)
+void IDtoNameBase_SortBaseByID()
 {
     // Sort the array by blockID in ascending order using bubble sort
-    for (int i = 0; i < (*IDtoNameBase)->storedSize - 1; ++i)
+    for (int i = 0; i < IDtoNameBase->storedSize - 1; ++i)
     {
-        for (int j = 0; j < (*IDtoNameBase)->storedSize - i - 1; ++j)
+        for (int j = 0; j < IDtoNameBase->storedSize - i - 1; ++j)
         {
-            if ((*IDtoNameBase)->array[j].blockID > (*IDtoNameBase)->array[j + 1].blockID)
+            if (IDtoNameBase->array[j].blockID > IDtoNameBase->array[j + 1].blockID)
             {
                 // Swap the elements
-                blockBase_Data temp = (*IDtoNameBase)->array[j];
-                (*IDtoNameBase)->array[j] = (*IDtoNameBase)->array[j + 1];
-                (*IDtoNameBase)->array[j + 1] = temp;
+                blockBase_Data temp = IDtoNameBase->array[j];
+                IDtoNameBase->array[j] = IDtoNameBase->array[j + 1];
+                IDtoNameBase->array[j + 1] = temp;
             }
         }
     }

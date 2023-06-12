@@ -4,5 +4,7 @@
 
 void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer);
 void SDL_EndAll_StopProgram();
+void SDL_SwitchPause();
+bool SDL_GetPauseBool();
 
 #endif
