@@ -65,6 +65,7 @@ struct cameraVelocityRecord cameraVelocityRecord = (struct cameraVelocityRecord)
 
 private char *GetAssetsInFolder(const char *folderName, const char *extensionName);
 private void Render_RenderWords(char *words, SDL_position leftUpPos, SDL_size charSize);
+private void Render_RenderBlockInBackpack(SDL_position nowPos, short blockID);
 private void SearchWords_Init();
 private void SearchWords_chaningPressingShift(char *inputChar, SDL_Event event);
 private SDL_Rect Render_GetWordsTotalRect(char *words, SDL_position leftUpPos, SDL_size charSize);
@@ -228,20 +229,39 @@ public void Render_RenderBackpack()
     SDL_Rect rect = (SDL_Rect){.x = backpackPos.x, .y = backpackPos.y, .w = backpackSize.width, .h = backpackSize.height};
     SDL_RenderCopy(renderer, backpack_texture, NULL, &rect);
     
+    // 取得 in cell 方塊資訊
+    SDL_position inCellBlockStartPos = Backpack_GetInCellBlockStartPos();
+    SDL_size inCellBlockSize = Backpack_GetCellSize();
+    SDL_size backpackCellNum = Backpack_GetBlockNumberInWidthAndHeight();
+    static short *textureIDs = NULL; int totalIDnum; // 要初始化！
+    TextureBase_GetAllID(&textureIDs, &totalIDnum);
 
-    // 還要把方塊畫上去
-    // int *textureIDs = TextureBase_GetAllBlock();
-    // SDL_position startPos = Backpack_GetBlockStartPosition();
-
-    // Render_RenderBlockInBackpack();
+    // 把方塊畫上去
+    SDL_position nowDrawBlockPos = inCellBlockStartPos;
+    for(int y = 0; y < backpackCellNum.height; ++y)
+    {
+        nowDrawBlockPos.x = inCellBlockStartPos.x;
+        for(int x = 0; x < backpackCellNum.width; ++x)
+        {
+            int nowIndex = x + y * backpackCellNum.width; // 現在是第幾格方塊 (只是2D變1D)
+            if(nowIndex < totalIDnum) // 比總數小，有東西，畫出！
+                Render_RenderBlockInBackpack(nowDrawBlockPos, textureIDs[nowIndex]);
+            nowDrawBlockPos.x += inCellBlockSize.width;
+        }
+        nowDrawBlockPos.y += inCellBlockSize.height;
+    }
 }
 
 // 畫背包上的方塊到 renderer
-private void Render_RenderBlockInBackpack(SDL_position nowPos, int blockID)
+private void Render_RenderBlockInBackpack(SDL_position nowPos, short blockID)
 {
     // 取得材質 by 編號
-    // SDL_Texture *nowTexture = TetxureBase_GetTexture(blockID);
-    // SDL_size blockSize = Backpack_GetBlockSize();
+    SDL_Texture *nowTexture = TextureBase_GetTextureUsingID(blockID);
+    SDL_size blockSize = Backpack_GetInCellBlockSize();
+
+    // 畫出
+    SDL_Rect rect = (SDL_Rect){.x = nowPos.x, .y = nowPos.y, .w = blockSize.width, .h = blockSize.height};
+    SDL_RenderCopy(renderer, nowTexture, NULL, &rect);
 }
 
 // 畫背包的 cursor 到 renderer
@@ -269,10 +289,6 @@ public void Render_RenderMap()
     startBlockPos.x *= blockSize.width;
     startBlockPos.y *= blockSize.height; // 取得的位置是「方塊數量位置」不是真正座標，要換成真正座標 (for renderCopy)
 
-    // get 目前 block 的材質
-    // SDL_Texture *blockTexture = TextureBase_GetTextureByID(1);
-    SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Building_Bricks1.png");
-
     // 顯示
     SDL_position nowBlockPos = startBlockPos;
     for (int y = 0; y < totalBlockNumInWindow.height; ++y)
@@ -282,6 +298,9 @@ public void Render_RenderMap()
         {
             if (renderingMap[y][x] != NO_BLOCK_ID)
             {
+                // get 目前 block 的材質
+                SDL_Texture *blockTexture = TextureBase_GetTextureUsingID(renderingMap[y][x]);
+
                 // 算座標 (因實際顯示往下才是 +y ，所以要算完相對 y 座標後加負號)、顯示
                 SDL_Rect rect = (SDL_Rect){.x = nowBlockPos.x - cameraPosition.x, .y = -(nowBlockPos.y - cameraPosition.y), .w = blockSize.width, .h = blockSize.height};
                 SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
@@ -334,8 +353,7 @@ public void Render_RenderHotbar()
         if(blockIDArray[i] != NO_BLOCK_ID)
         {
             // 取 Texturew、畫出
-            // SDL_Texture *blockTexture = TetxureBase_GetTexture();
-            SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Building_Bricks1.png");
+            SDL_Texture *blockTexture = TextureBase_GetTextureUsingID(blockIDArray[i]);
             SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
         }
         rect.x += cellSize.width; // 到下一個 cell

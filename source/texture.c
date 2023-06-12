@@ -1,6 +1,7 @@
 /* 材質(背包)資料庫(紅黑樹？)、Sort、Search 與 相關function (file I/O：編號對應材質名 file、圖片資料夾)*/
 #include "../include/basicSetting.h" // 要用的
 #include "../include/render.h" // 要用的
+#include "../include/ui.h" // 要用的
 #include "../include/texture.h" // 要放的
 #include <string.h>
 #include <dirent.h>
@@ -33,7 +34,7 @@ storedBlock_DataBase storedBlock_ArrayRecord;
 storedBlock_DataBase IDtoNameBase = NULL; // 要預設沒東西，表示有需要 + 不存在 才 init 用
 
 // 記住 TextureBase_isFindBlockBySearchWords()，找到的ID
-short searchedBlockID = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
+short searchedBlockIndex = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
 
 // 取得圖片資料夾路徑
 private char *getPictureFolderPath()
@@ -103,7 +104,11 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
 
     int index = 0;  //方塊資料庫索引
 
-    while ((entry = readdir(dir)) != NULL)
+    
+    SDL_size backpackCellNum = Backpack_GetBlockNumberInWidthAndHeight(); // 取得背包格子總數，資料庫的方塊不能比他多
+    int totalCellnum = backpackCellNum.width * backpackCellNum.height;
+
+    while ((entry = readdir(dir)) != NULL && index < totalCellnum)
     {
         // Skip "." and ".." entries
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
@@ -210,7 +215,7 @@ public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
 
 
 // 依編號取得圖片
-SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
+SDL_Texture *TextureBase_GetTextureUsingID(short blockID)
 {
     for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
@@ -221,6 +226,7 @@ SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRe
     blockBase_Data* current = storedBlock_ArrayRecord->head;
     while (current != NULL)
     {
+        printf("%d ", current->blockID);
         if (current->blockID == blockID)
             return current->blockTexture;
         current = current->next;
@@ -330,7 +336,7 @@ public bool TextureBase_isFindBlockBySearchWords()
     {
         if (strcmp(IDtoNameBase->array[i].blockName, textureName) == 0)
         {
-            searchedBlockID = IDtoNameBase->array[i].blockID; // 在這邊記住 ID 就不用再找一次！
+            searchedBlockIndex = i; // 在這邊記住編號
             return true;
         }
             
@@ -345,31 +351,34 @@ public bool TextureBase_isFindBlockBySearchWords()
     return false;
 } 
 
-// 把搜尋到的方塊編號回傳
-public short TextureBase_GetSearchedBlockID()
+// 把搜尋到的方塊是材質資料庫的第幾個回傳
+public int TextureBase_GetSearchedBlockIndex()
 {
     // Return -1 if the block is not found
-    if(searchedBlockID == EOF)
+    if(searchedBlockIndex == EOF)
         return -1;
     // 回傳ID
     else
     {
-        short retrunID = searchedBlockID;
-        searchedBlockID = EOF;
-        IDtoNameBase_Clear();
-        return retrunID;
+        int retrunIndex = searchedBlockIndex;
+        searchedBlockIndex = EOF; // 清空搜尋紀錄
+        // IDtoNameBase_Clear();
+        // 找是第幾格
+        return retrunIndex;
     }
 }
 
-// 取得材質資料庫所有的材質ID 
-public short *TextureBase_GetAllID()
+// 取得材質資料庫所有的材質ID (需有 ID的buffer 與 放方塊總數的buffer) (buffer沒用記得free，還要初始化 buffer為NULL)
+public void TextureBase_GetAllID(short **IDbuffer, int *totalBlockNum)
 {
-    short* materialID = (short*)malloc(sizeof(short) * storedBlock_ArrayRecord->storedSize);
+    *totalBlockNum = storedBlock_ArrayRecord->storedSize;
+
+    if(*IDbuffer == NULL)
+        *IDbuffer = (short*)malloc(sizeof(short) * storedBlock_ArrayRecord->storedSize);
     for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
-        materialID[i] = storedBlock_ArrayRecord->array[i].blockID;
+        (*IDbuffer)[i] = storedBlock_ArrayRecord->array[i].blockID;
     }
-    return materialID;
 }
 
 //依照方塊編號大小排序資料庫 // (似乎不用用到，但應該很好用！)
