@@ -19,12 +19,12 @@ int main(void)
     SDL_Renderer* renderer;
     SDL_InitializeAll(&window, &renderer);
 
-    // 資料庫準備初始化 + render 準備
-    // TextureBase_Init();
+    // 資料庫初始化
+    TextureBase_Init(renderer);
     HotBar_Init();
     Map_Init();
     Render_Init(renderer);
-    
+
     // 偵測輸入(主迴圈)
     SDL_Event event;
     while (true) 
@@ -126,6 +126,6 @@ int main(void)
     Render_Clear();
     Map_Clear();
     HotBar_Clear();
-    // TextureBase_Clear();
+    TextureBase_Clear();
     SDL_EndAll_StopProgram();
 }

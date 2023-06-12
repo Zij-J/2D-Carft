@@ -270,8 +270,8 @@ public void Render_RenderMap()
     startBlockPos.y *= blockSize.height; // 取得的位置是「方塊數量位置」不是真正座標，要換成真正座標 (for renderCopy)
 
     // get 目前 block 的材質
-    // SDL_Texture *blockTexture = TetxureBase_GetTexture();
-    SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Grass_Block.png");
+    // SDL_Texture *blockTexture = TextureBase_GetTextureByID(1);
+    SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Building_Bricks1.png");
 
     // 顯示
     SDL_position nowBlockPos = startBlockPos;
@@ -335,7 +335,7 @@ public void Render_RenderHotbar()
         {
             // 取 Texturew、畫出
             // SDL_Texture *blockTexture = TetxureBase_GetTexture();
-            SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Grass_Block.png");
+            SDL_Texture *blockTexture = IMG_LoadTexture(renderer, "block_pictures/Building_Bricks1.png");
             SDL_RenderCopy(renderer, blockTexture, NULL, &rect);
         }
         rect.x += cellSize.width; // 到下一個 cell
