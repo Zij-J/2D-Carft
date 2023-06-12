@@ -35,13 +35,13 @@
 
 private bool backpack_isOn = false; // 背包是否開啟
 private cursorArea backpack_cursorArea = nothingArea; // 紀錄 cursor 在哪區
-private SDL_position backpackCursorPosition = {.x = POS_NOT_EXISTS, .y = POS_NOT_EXISTS};
+private SDL_position backpack_cursorPosition = {.x = POS_NOT_EXISTS, .y = POS_NOT_EXISTS};
 
 //linked list node
 struct node_Hotbar
 {
     short BlockID;
-    int num_of_Hotbar; //Hotbar裡的第幾格
+    int num_of_Hotbar; //Hotbar裡的第幾格(1-base的！)
     struct node_Hotbar *next;
 }*root, *now;
 typedef struct node_Hotbar node_Hotbar;
@@ -49,21 +49,23 @@ typedef struct node_Hotbar node_Hotbar;
 // 初始化快捷欄
 public void HotBar_Init()
 {
-    // 需匯入材質(背包)資料庫的編號??
-    // int *textureIDs = TextureBase_GetAllID();
+    // 需匯入材質(背包)資料庫的編號 for 預設 hotbar
+    short *textureIDs = NULL; int IDnumbers; // 記得初始化！
+    TextureBase_GetAllID(&textureIDs, &IDnumbers);
 
     root=malloc(sizeof(node_Hotbar));
     node_Hotbar *curNode=root;
-    for(int i=1; i<HOTBAR_CELL_NUM; i++){
+    int i;
+    for(i = 1; i<HOTBAR_CELL_NUM; i++){
         curNode->num_of_Hotbar=i;
-        curNode->BlockID= NO_BLOCK_ID;
-        /*暫用*/if(i == 1 || i == 3) curNode->BlockID= 1;
+        curNode->BlockID= (i <= IDnumbers)? textureIDs[i-1] : NO_BLOCK_ID; // 換成0-base (資料課沒有了，就是 NO_BLOCK_ID)
         curNode->next=malloc(sizeof(node_Hotbar));
         curNode=curNode->next;
     }
     curNode->num_of_Hotbar=HOTBAR_CELL_NUM;
-    curNode->BlockID=NO_BLOCK_ID;
+    curNode->BlockID=(i <= IDnumbers)? textureIDs[i-1] : NO_BLOCK_ID; // 換成0-base;
     curNode->next=root; // 環狀 linked list!
+    free(textureIDs); // 這只會用到一次，所以要清 buffer
 
     // 預設 now 是第一個
     now = root;
@@ -177,8 +179,8 @@ public void Backpack_MoveCursor()
         // 記住 index 就可
         SDL_position relativePosInBlockArea = (SDL_position){.x = mouseX - blockAeraStartPos.x, .y = mouseY - blockAeraStartPos.y};
         int xTimes = relativePosInBlockArea.x / cellSize.width, yTimes = relativePosInBlockArea.y / cellSize.height;
-        backpackCursorPosition.x = xTimes;
-        backpackCursorPosition.y = yTimes;
+        backpack_cursorPosition.x = xTimes;
+        backpack_cursorPosition.y = yTimes;
     }
     // 在搜尋框框內，開啟搜尋mode
     else if ((mouseX >= searchAeraStartPos.x && mouseX <= searchAeraStartPos.x + searchCellSize.width) 
@@ -194,8 +196,8 @@ public void Backpack_MoveCursor()
     {
         if(backpack_cursorArea != nothingArea)
         {
-            backpackCursorPosition.x = POS_NOT_EXISTS;
-            backpackCursorPosition.y = POS_NOT_EXISTS;
+            backpack_cursorPosition.x = POS_NOT_EXISTS;
+            backpack_cursorPosition.y = POS_NOT_EXISTS;
             if(backpack_cursorArea == searchArea)
                 SDL_FreeCursor(SDL_GetCursor()); // 切換回來，要 free  
             backpack_cursorArea = nothingArea;
@@ -218,22 +220,37 @@ public void Backpack_MoveCursor()
 
 
 // 把背包選到的方塊更新到選到的 Hotbar 上
-void Backpack_UpdateBlockToHotbar(SDL_Event event)
+public void Backpack_UpdateBlockToHotbar(SDL_Event event)
 {
     //因為看起來你要用拖曳的，所以：
     //if 鼠標在方塊位置&選取
         //移動方塊(新增變數+隨時調整方塊座標)
         //if 在hotbar位置放開
             //修改hotbar對應位置的node->BlockID
-}
+
+    // 我先用選取的
+    if(event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        static short *totalBlockID; int totalIDnum;
+        TextureBase_GetAllID(&totalBlockID, &totalIDnum);
+
+        // 用 cursor 位置取 index, 更新 now，搞定
+        int nowBackpackIndex = backpack_cursorPosition.x + backpack_cursorPosition.y * BACKPACK_WIDTH_CELL_NUM;
+        (*now).BlockID = totalBlockID[nowBackpackIndex];
+    }
+}   
 
 // 把 cursor 移動到 找到的方塊
-void Backpack_FindBlockAndMoveCursor(SDL_Event event)
+void Backpack_FindBlockAndMoveCursor(SDL_Window *window, SDL_Event event)
 {
-    // 取得找到的編號
-    // short FoundBlockID = TextureBase_GetSearchedBlockID();
-
-    // 把編號變成位置，把cursor移到那邊
+    // 取得找到的位置
+    int FoundBlockIndex = TextureBase_GetSearchedBlockIndex();
+    // 移動 cursor (強制移動真的 cursor)
+    SDL_position blockAreaStartPos = Backpack_GetBlockStartPosition();
+    SDL_size cellSize = Backpack_GetCellSize();
+    int blockPos_x = (FoundBlockIndex % BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
+    int blockPos_y = (FoundBlockIndex / BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
+    SDL_WarpMouseInWindow(window, blockAreaStartPos.x + blockPos_x + cellSize.width/2, blockAreaStartPos.y + blockPos_y + cellSize.height/2);
 }
 
 // 有輸入，再執行
@@ -287,6 +304,7 @@ SDL_size HotBar_GetInCellBlockSize()
     return HOTBAR_BLOCK_IN_CELL_SIZE;
 }
 
+
 // 取得背包左上角位置
 SDL_position Backpack_GetPosition()
 {
@@ -304,7 +322,7 @@ SDL_position Backpack_GetCursorPosition()
 {
     SDL_size cellSize = BACKPACK_CELL_SIZE;
     SDL_position blockAreaStartPos = Backpack_GetBlockStartPosition();
-    SDL_position realPos = backpackCursorPosition;
+    SDL_position realPos = backpack_cursorPosition;
 
     // 在搜尋區域，回搜尋區位置
     if(backpack_cursorArea == searchArea)
@@ -340,11 +358,31 @@ SDL_size Backpack_GetCursorSize()
     else // 在搜尋區域要回傳特殊大小
         return BACKPACK_SEARCH_AREA_SIZE;
 }
-
-SDL_size Backpack_GetBlockSize()
+// get Cell方塊之間間隔
+SDL_size Backpack_GetCellSize()
 {
-    //上面define方塊大小 + return
+    return BACKPACK_CELL_SIZE;
 }
+// get Backpack 內部方塊開始位置 (取置中的左上)
+SDL_position Backpack_GetInCellBlockStartPos()
+{
+    SDL_position backpackBlockAreaLeftUpPos = Backpack_GetBlockStartPosition();
+    SDL_size cellSize = BACKPACK_CELL_SIZE;
+    SDL_size blockInCellSize = BACKPACK_BLOCK_IN_CELL_SIZE;
+    return (SDL_position){.x = backpackBlockAreaLeftUpPos.x +cellSize.width/2 - blockInCellSize.width/2
+                        , .y = backpackBlockAreaLeftUpPos.y +cellSize.height/2 - blockInCellSize.height/2};
+}
+// get Backpack 內部方塊大小
+SDL_size Backpack_GetInCellBlockSize()
+{
+    return BACKPACK_BLOCK_IN_CELL_SIZE;
+}
+// get Backpack 長寬方塊數量
+SDL_size Backpack_GetBlockNumberInWidthAndHeight()
+{
+    return (SDL_size) {.width = BACKPACK_WIDTH_CELL_NUM, .height = BACKPACK_HEIGHT_CELL_NUM};
+}
+
 
 // 取得現在 cursor 在方塊區、還是在搜尋區
 cursorArea Backpack_GetCursorOnArea()
@@ -368,6 +406,7 @@ SDL_Color Backpack_GetSearchWordColor()
 {
     return SEARCH_WORD_COLOR;
 }
+
 
 // 回傳 提醒文字 位置
 SDL_position Backpack_GetSearchNotifyPosition()

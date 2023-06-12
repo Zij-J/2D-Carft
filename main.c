@@ -7,10 +7,6 @@
 #include "./include/render.h"
 #undef main
 
-// 背包的search、sort、方塊部分測試開關，完成code後，改成1就可以開啟
-#define TESTING_BACKPACK_FUNCTIONS 0
-
-
 // main函式
 int main(void) 
 {
@@ -63,15 +59,12 @@ int main(void)
             // 移動背包的 cursor、是否有輸入
             Backpack_MoveCursor();
 
-            
             // 有輸入、再執行背包輸入部分
             if(Backpack_isInput(event) == true)
             {
                 // 在方塊區域、更新選到的方塊到快捷欄
                 if(Backpack_GetCursorOnArea() == blockArea)
-                {
-                    // Backpack_UpdateBlockToHotbar();
-                }
+                    Backpack_UpdateBlockToHotbar(event);
                 // 在搜尋區域
                 if(Backpack_GetCursorOnArea() == searchArea)
                 {
@@ -81,17 +74,15 @@ int main(void)
                     // 按 enter，依目前的字去搜尋
                     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
                     {
-                        #if TESTING_BACKPACK_FUNCTIONS
                         // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
                         if(TextureBase_isFindBlockBySearchWords() == true)
                         {
-                            // Backpack_FindBlockAndMoveCursor();
+                            Backpack_FindBlockAndMoveCursor(window, event);
                             Render_EnableSearchNotify(true);
                         }
                         // 沒找到，印 提醒沒找到文字
                         else
                             Render_EnableSearchNotify(false);
-                        #endif
                     }
                 }   
             }
