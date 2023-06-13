@@ -1,3 +1,16 @@
+# For Users 
+## How to Run this program?
+1. First off, download the whole project file.
+2. You can change the picture in `block_picture` to get your favorite
+3. The final step different from platform
+- Windows:
+  - just run `main.exe` and enjoy the game!
+- Linux and Mac:
+  - make sure you have the [gcc compiler](https://gcc.gnu.org/)
+  - open the terminal in your system, 
+  - use `cd` command to go to this folder
+  - run `make`, you will get a program named `main.out`
+  - run `main.out` and enjoy the game!
 # 給程式設計師
 ## 如何使用 Git & Github
 - 參考資料：
@@ -380,4 +393,3 @@ git remote rename origin <新名字>
 - https://minecraft.fandom.com/wiki/List_of_block_textures
 ## Flow Chart 繪製工具：
 - https://app.diagrams.net/ (線上、免費！)
-# For Users 

@@ -1,6 +1,7 @@
 /* 材質(背包)資料庫(紅黑樹？)、Sort、Search 與 相關function (file I/O：編號對應材質名 file、圖片資料夾)*/
 #include "../include/basicSetting.h" // 要用的
 #include "../include/render.h" // 要用的
+#include "../include/ui.h" // 要用的
 #include "../include/texture.h" // 要放的
 #include <string.h>
 #include <dirent.h>
@@ -8,14 +9,36 @@
 #include <io.h>
 
 #define INIT_ARRAY_SIZE 100
-#define MAX_ABBSOULTE_PATH_LENGTH 255 // 4096 這是 UNIX 絕對路徑最大值，Windows 只有 255
+#define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
+
+struct blockDataBase_Texture
+{
+    short blockID;
+    int blockIndexInArray;
+    char *blockName;
+    SDL_Texture *blockTexture;
+    struct blockDataBase_Texture *next;    
+};
+typedef struct blockDataBase_Texture blockBase_Data;
+
+struct storedBlockArrayStruct
+{
+    blockBase_Data *array;
+    int storedSize;
+    int maxSize;
+    blockBase_Data *head;
+};
+typedef struct storedBlockArrayStruct storedBlock_ArrayAndSize;
+typedef storedBlock_ArrayAndSize *storedBlock_DataBase;
 
 // 創立 方塊(材質資料庫) 、 ID對應名字資料庫
 storedBlock_DataBase storedBlock_ArrayRecord;
 storedBlock_DataBase IDtoNameBase = NULL; // 要預設沒東西，表示有需要 + 不存在 才 init 用
 
 // 記住 TextureBase_isFindBlockBySearchWords()，找到的ID
-short searchedBlockID = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
+short searchedBlockIndex = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
+// 記住 RBtree 遍歷結果，就不用每次呼叫都要重新遍歷
+short *RBT_data_array; int RBT_data_array_element_number = 0;
 
 //RBTree
 typedef enum {BLACK, RED} COLOR;//node color
@@ -28,17 +51,19 @@ struct tNode{
     struct tNode *Rchild;
     struct tNode *parent;
     SIDE side;//parent's L or R child
-}*root;
+}*root, *first;
 
 struct tNode* RBT_init();//initiallize
 void insert(struct tNode *, blockBase_Data*);//insert the node to red black tree
 struct tNode* find(struct tNode*, blockBase_Data*);//find node by block's name
 struct tNode* find_root(struct tNode *);//find red black tree root
-int* store_data(struct tNode *);//store blockID to array
 private struct tNode* create_tNode(blockBase_Data*, struct tNode*, SIDE);
 private void check(struct tNode*);
 private void left_rotate(struct tNode*);
 private void right_rotate(struct tNode*);
+private void store_data(struct tNode *);//store blockID to array
+private void cp_itsRelation(struct tNode *);
+
 
 // 取得圖片資料夾路徑
 private char *getPictureFolderPath()
@@ -108,7 +133,11 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
 
     int index = 0;  //方塊資料庫索引
 
-    while ((entry = readdir(dir)) != NULL)
+    
+    SDL_size backpackCellNum = Backpack_GetBlockNumberInWidthAndHeight(); // 取得背包格子總數，資料庫的方塊不能比他多
+    int totalCellnum = backpackCellNum.width * backpackCellNum.height;
+
+    while ((entry = readdir(dir)) != NULL && index < totalCellnum)
     {
         // Skip "." and ".." entries
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
@@ -134,12 +163,14 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
 
         // Add the texture to the blockBase_Data
         storedBlock_ArrayRecord->array[index].blockName = duplicateString(fileName);
+        //printf("block name: %s\n", storedBlock_ArrayRecord->array[index].blockName);//test
         storedBlock_ArrayRecord->array[index].blockID = index;//索引為方塊編號
         storedBlock_ArrayRecord->array[index].blockTexture = texture;
         storedBlock_ArrayRecord->array[index].next = NULL;
 
         //RBTree
-        insert(root, &storedBlock_ArrayRecord->array[index]);
+        root=find_root(root);
+        insert(root, &(storedBlock_ArrayRecord->array[index])); // 取位置運算的優先級較高，所以要括號！
         
         index++;
 
@@ -148,8 +179,10 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
             storedBlock_ArrayRecord->maxSize *= 2;
             storedBlock_ArrayRecord->array = (blockBase_Data *)realloc(storedBlock_ArrayRecord->array, sizeof(blockBase_Data) * storedBlock_ArrayRecord->maxSize);
         }
-    }    
+    }
     storedBlock_ArrayRecord->storedSize = index;
+    root=find_root(root);
+    store_data(root); // 在此就先遍歷！
 
     //依照方塊名稱排序
     qsort(storedBlock_ArrayRecord->array, storedBlock_ArrayRecord->storedSize, sizeof(blockBase_Data), compareTextures);
@@ -170,7 +203,7 @@ public void TextureBase_Init(SDL_Renderer *renderer)
     char *blockFolderPath = getPictureFolderPath();
 
     //RBTree
-    root=RBT_init();
+    first=RBT_init();
 
     // 從圖片資料夾開啟方塊
     TextureBase_GetAllBlock(blockFolderPath, renderer);
@@ -220,9 +253,8 @@ public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
     return NULL;
 } 
 
-
 // 依編號取得圖片
-SDL_Texture* TextureBase_GetTextureByID(storedBlock_DataBase storedBlock_ArrayRecord, int blockID)
+SDL_Texture *TextureBase_GetTextureUsingID(short blockID)
 {
     for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
@@ -337,60 +369,46 @@ public bool TextureBase_isFindBlockBySearchWords()
     // 取得搜尋文字
     char* textureName = SearchWords_GetSearchingWords();
 
-    /*
-    // 比較
-    for (int i = 0; i < IDtoNameBase->storedSize; ++i)
-    {
-        if (strcmp(IDtoNameBase->array[i].blockName, textureName) == 0)
-        {
-            searchedBlockID = IDtoNameBase->array[i].blockID; // 在這邊記住 ID 就不用再找一次！
-            return true;
-        }
-            
-    }
-    blockBase_Data* current = IDtoNameBase->head;
-    while (current != NULL)
-    {
-        if (strcmp(current->blockName, textureName) == 0)
-            return true;
-        current = current->next;
-    }
-    return false;
-    */
+    //find if exist or not
     blockBase_Data tmp = {.blockName=textureName};
     struct tNode* ifexist = find(root, &tmp);
+    // printf("ok!");
     if(ifexist==NULL) return false;
     else{
-        searchedBlockID = ifexist->blockData->blockID;
+        searchedBlockIndex = ifexist->blockData->blockIndexInArray;
         return true;
     }
 } 
 
-// 把搜尋到的方塊編號回傳
-public short TextureBase_GetSearchedBlockID()
+// 把搜尋到的方塊是材質資料庫的第幾個回傳
+public int TextureBase_GetSearchedBlockIndex()
 {
     // Return -1 if the block is not found
-    if(searchedBlockID == EOF)
+    if(searchedBlockIndex == EOF)
         return -1;
     // 回傳ID
     else
     {
-        short retrunID = searchedBlockID;
-        searchedBlockID = EOF;
-        IDtoNameBase_Clear();
-        return retrunID;
+        int retrunIndex = searchedBlockIndex;
+        searchedBlockIndex = EOF; // 清空搜尋紀錄
+        // IDtoNameBase_Clear();
+        // 找是第幾格
+        return retrunIndex;
     }
 }
 
-// 取得材質資料庫所有的材質ID 
-public short *TextureBase_GetAllID()
+
+// 取得材質資料庫所有的材質ID (需有 ID的buffer 與 放方塊總數的buffer) (buffer沒用記得free，還要初始化 buffer為NULL)
+public void TextureBase_GetAllID(short **IDbuffer, int *totalBlockNum)
 {
-    short* materialID = (short*)malloc(sizeof(short) * storedBlock_ArrayRecord->storedSize);
-    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
+    *totalBlockNum = RBT_data_array_element_number;
+
+    if(*IDbuffer == NULL)
     {
-        materialID[i] = storedBlock_ArrayRecord->array[i].blockID;
-    }
-    return materialID;
+        *IDbuffer = (short *)malloc(sizeof(short) * RBT_data_array_element_number); // 因為只傳 pointer 會錯 (推測編譯器是拒絕在不知道是 array 的情況下用[i] ?)，所以還是分記憶體
+        for(int i = 0; i < RBT_data_array_element_number; ++i)
+            (*IDbuffer)[i] = RBT_data_array[i]; 
+    }   
 }
 
 //依照方塊編號大小排序資料庫 // (似乎不用用到，但應該很好用！)
@@ -424,13 +442,16 @@ private struct tNode* create_tNode(blockBase_Data *blockData, struct tNode* Pare
 }
 
 struct tNode* RBT_init(){
-    struct tNode *root=create_tNode(NULL, NULL, NONE);
-    root->color=BLACK;
-    return root;
+    struct tNode *first=create_tNode(NULL, NULL, NONE);
+    first->color=BLACK;
+    root=first;
+    return first;
 }
 
 void insert(struct tNode *curNode, blockBase_Data *blockData) {
     if(curNode->blockData != NULL && curNode->blockData->blockName != NULL){
+        // DEBUG_PRINT(blockData->blockName, "%s");
+        // DEBUG_PRINT(curNode->blockData->blockName, "%s.");
         if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return;
         else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0){
             if(curNode->Lchild==NULL){
@@ -498,6 +519,7 @@ private void check(struct tNode *curNode){
             }
         }
     }
+
 }
 
 private void left_rotate(struct tNode *curNode){
@@ -553,8 +575,13 @@ struct tNode* find_root(struct tNode *curNode){
     return curNode;
 }
 
-int* store_data(struct tNode *curNode){
-    int count=0, *block_ID=malloc((node_count+1)*sizeof(int));
+struct tNode* return_root(){
+    return root;
+}
+
+void store_data(struct tNode *curNode){
+    int count=0;
+    RBT_data_array=malloc((node_count+1)*sizeof(short));
     char max_print[50], now_print[49]={0,'\0'};
     struct tNode* M=find_root(curNode);
     curNode=M;
@@ -564,11 +591,21 @@ int* store_data(struct tNode *curNode){
         if(curNode->Lchild!=NULL && strcmp(curNode->Lchild->blockData->blockName, now_print)>0) curNode=curNode->Lchild;
         else if(strcmp(curNode->blockData->blockName, now_print)>0){
             strcpy(now_print, curNode->blockData->blockName);
-            *(block_ID+(count++))=curNode->blockData->blockID;
+            *(RBT_data_array+count)=curNode->blockData->blockIndexInArray = count; // 紀錄在 array 的第幾個
+            *(RBT_data_array+(count++))=curNode->blockData->blockID;
         }
         else if(curNode->Rchild!=NULL && strcmp(curNode->Rchild->blockData->blockName, now_print)>0) curNode=curNode->Rchild;
         else curNode=curNode->parent;
     }
-    *(block_ID+count)=-1;//stop
-    return block_ID;
+    *(RBT_data_array+count)=-1;//stop
+   RBT_data_array_element_number = count; // 記住元素總數
+}
+
+
+private void cp_itsRelation(struct tNode *curNode){//cp: check and print
+    printf("%p\t", curNode->blockData);
+    curNode->color==RED ? printf("RED\t") : printf("BLACK\t");
+    curNode->Lchild ? printf("L:%p\t",curNode->Lchild->blockData) : printf("L:NULL\t");
+    curNode->parent ? printf("p:%p\t",curNode->parent->blockData) : printf("p:NULL\t");
+    curNode->Rchild ? printf("R:%p\n",curNode->Rchild->blockData) : printf("R:NULL\n");
 }

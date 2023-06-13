@@ -9,13 +9,24 @@ source := $(addsuffix .o, $(source))
 codes := main.o $(source)
 # dll 與 exe 也定義一下
 dlls := SDL2.dll SDL2_image.dll SDL2_ttf.dll
-exe := main.exe
+ifeq ($(OS),Windows_NT)
+	exe := main.exe
+else
+	exe := main
+endif
+
 # header 變動也要處理！用 wildcard 就可處理全部在 include 內的.h
 headers := $(wildcard include/*.h)
 # 這是刪除的路徑(因為 windows 的 del 強迫要用 \ 當路徑，只能再改，用 notdir 只提出檔名，再用 addprefix 把新路徑加上去)
 outs := $(notdir $(source))
 outs := main.o $(addprefix source\, $(outs))
 
+# del command 要依作業系統不同玵而變
+ifeq ($(OS),Windows_NT)
+	delCommand := del $(outs)
+else
+	delCommand := rm -rf $(outs)
+endif
 
 # 輸入任何東西都要檢查是否 $(codes) 的東西變過 (.dll 在執行時也要被看見，所以必須噢 .exe 放於同一檔)
 all: $(codes)
@@ -33,5 +44,5 @@ all: $(codes)
 # .PHONY：假裝有一個叫 clean 的檔案存在，所以如果用 make clean，就會執行 clean: 的指令
 .PHONY: clean
 clean:
-	del $(outs)
-# 原本是 rm -rf (強迫刪除)，要換成 window 版
+	$(delCommand)
+	

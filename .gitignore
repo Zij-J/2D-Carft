@@ -1,9 +1,13 @@
 # 忽略 .vscode
 /.vscode
 
-# 忽略 exe 檔
-/*.exe
+# 忽略 exe 檔 (原本需要，但怕其他環境無法編譯，所以留下.exe，不能編譯至少還能跑遊戲)
+# /*.exe
 
 # 忽略 .o 檔
 /*.o
 /source/*.o
+
+# 忽略 所有地圖檔，但保留 .gitkeep (只是空檔案，讓 git 紀錄有 map 資料夾存在)
+/map/*
+!/map/*.gitkeep
