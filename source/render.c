@@ -17,12 +17,6 @@
 #define CAMERA_MOVE_ACCLERATION 5     // 相機移動加速度 (每一毫秒加速度)
 #define BACKGROUND_SLOWER_TIMES 10 // 背景比相機慢幾倍
 #define SEARCH_NOTIFY_DISAPPEAR_MILISECOND 2000 // 提醒文字幾豪秒會不見
-enum searchWord_colorData
-{
-    searchWord_red = 255,
-    searchWord_blue = 255,
-    searchWord_green = 255
-};
 SDL_Renderer *renderer;
 
 // 記住的文字 Font、成功失敗文字、暫停文字、背景、地圖 cursor、快捷欄cursor、快捷欄

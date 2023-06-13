@@ -14,7 +14,8 @@
 #define public
 
 // debug用 (第一個是要 print 的東西，第二個是 "%d" 之類的)
-#define DEBUG_PRINT(n, conversionSpceifier) fprintf(stderr, #n ": " conversionSpceifier "\n", n);SDL_Delay(1000);
+#define DEBUG_PRINT(n, conversionSpceifier) fprintf(stderr, #n ": " conversionSpceifier "\n", n);SDL_Delay(5);
+#define P printf("*file: %s, func: %s, line: %d\n", __FILE__, __func__, __LINE__)
 
 // windows大小 + 名字
 #define WINDOWS_NAME "2D-Craft"

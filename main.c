@@ -74,6 +74,10 @@ int main(void)
                     // 按 enter，依目前的字去搜尋
                     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
                     {
+                        /*test
+                        int *tmp= store_data(return_root());
+                        for(; *tmp!=-1; tmp++) printf("%d ", *tmp);*/
+
                         // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
                         if(TextureBase_isFindBlockBySearchWords() == true)
                         {

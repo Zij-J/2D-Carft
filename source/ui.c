@@ -43,7 +43,7 @@ struct node_Hotbar
     short BlockID;
     int num_of_Hotbar; //Hotbar裡的第幾格(1-base的！)
     struct node_Hotbar *next;
-}*root, *now;
+}*Hroot, *now;
 typedef struct node_Hotbar node_Hotbar;
 
 // 初始化快捷欄
@@ -53,8 +53,8 @@ public void HotBar_Init()
     short *textureIDs = NULL; int IDnumbers; // 記得初始化！
     TextureBase_GetAllID(&textureIDs, &IDnumbers);
 
-    root=malloc(sizeof(node_Hotbar));
-    node_Hotbar *curNode=root;
+    Hroot=malloc(sizeof(node_Hotbar));
+    node_Hotbar *curNode=Hroot;
     int i;
     for(i = 1; i<HOTBAR_CELL_NUM; i++){
         curNode->num_of_Hotbar=i;
@@ -64,18 +64,18 @@ public void HotBar_Init()
     }
     curNode->num_of_Hotbar=HOTBAR_CELL_NUM;
     curNode->BlockID=(i <= IDnumbers)? textureIDs[i-1] : NO_BLOCK_ID; // 換成0-base;
-    curNode->next=root; // 環狀 linked list!
+    curNode->next=Hroot; // 環狀 linked list!
     free(textureIDs); // 這只會用到一次，所以要清 buffer
 
     // 預設 now 是第一個
-    now = root;
+    now = Hroot;
 }
 
 // 清除 hotbar
 public void HotBar_Clear()
 {
     // free linked list用
-    node_Hotbar *curNode = root, *tmpNext;
+    node_Hotbar *curNode = Hroot, *tmpNext;
     for(int i = 1; i <= HOTBAR_CELL_NUM; ++i)
     {
         tmpNext = (*curNode).next;
@@ -108,7 +108,7 @@ void HotBar_GetAllID(short **bufferArray, int *totalIDNumber)
         *bufferArray = (short *)malloc((sizeof(short) * HOTBAR_CELL_NUM));
 
     // 傳ID
-    node_Hotbar *cur = root;
+    node_Hotbar *cur = Hroot;
     for(int i = 0; i < HOTBAR_CELL_NUM; ++i)
     {
         (*bufferArray)[i] = (*cur).BlockID;
