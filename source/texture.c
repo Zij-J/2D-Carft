@@ -13,7 +13,8 @@
 
 struct blockDataBase_Texture
 {
-    int blockID;
+    short blockID;
+    int blockIndexInArray;
     char *blockName;
     SDL_Texture *blockTexture;
     struct blockDataBase_Texture *next;    
@@ -36,6 +37,8 @@ storedBlock_DataBase IDtoNameBase = NULL; // 要預設沒東西，表示有需�
 
 // 記住 TextureBase_isFindBlockBySearchWords()，找到的ID
 short searchedBlockIndex = EOF; // 應該不會用到 EOF，但還是寫一下，代表找到過任何Block
+// 記住 RBtree 遍歷結果，就不用每次呼叫都要重新遍歷
+short *RBT_data_array; int RBT_data_array_element_number = 0;
 
 //RBTree
 typedef enum {BLACK, RED} COLOR;//node color
@@ -54,15 +57,13 @@ struct tNode* RBT_init();//initiallize
 void insert(struct tNode *, blockBase_Data*);//insert the node to red black tree
 struct tNode* find(struct tNode*, blockBase_Data*);//find node by block's name
 struct tNode* find_root(struct tNode *);//find red black tree root
-//int* store_data(struct tNode *);//store blockID to array
 private struct tNode* create_tNode(blockBase_Data*, struct tNode*, SIDE);
 private void check(struct tNode*);
 private void left_rotate(struct tNode*);
 private void right_rotate(struct tNode*);
-void store_data(struct tNode *);//store blockID to array
+private void store_data(struct tNode *);//store blockID to array
 private void cp_itsRelation(struct tNode *);
 
-int *RBT_data_array;
 
 // 取得圖片資料夾路徑
 private char *getPictureFolderPath()
@@ -181,8 +182,7 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
     }
     storedBlock_ArrayRecord->storedSize = index;
     root=find_root(root);
-    // printf("line: %d, n:%s, p:%p, r:%p\n", __LINE__, root->blockData->blockName, root->parent, root);
-    store_data(root);
+    store_data(root); // 在此就先遍歷！
 
     //依照方塊名稱排序
     qsort(storedBlock_ArrayRecord->array, storedBlock_ArrayRecord->storedSize, sizeof(blockBase_Data), compareTextures);
@@ -375,7 +375,7 @@ public bool TextureBase_isFindBlockBySearchWords()
     // printf("ok!");
     if(ifexist==NULL) return false;
     else{
-        searchedBlockIndex = ifexist->blockData->blockID;
+        searchedBlockIndex = ifexist->blockData->blockIndexInArray;
         return true;
     }
 } 
@@ -401,15 +401,14 @@ public int TextureBase_GetSearchedBlockIndex()
 // 取得材質資料庫所有的材質ID (需有 ID的buffer 與 放方塊總數的buffer) (buffer沒用記得free，還要初始化 buffer為NULL)
 public void TextureBase_GetAllID(short **IDbuffer, int *totalBlockNum)
 {
-
-    *totalBlockNum = storedBlock_ArrayRecord->storedSize;
+    *totalBlockNum = RBT_data_array_element_number;
 
     if(*IDbuffer == NULL)
-        *IDbuffer = (short*)malloc(sizeof(short) * storedBlock_ArrayRecord->storedSize);
-    for (int i = 0; i < storedBlock_ArrayRecord->storedSize; ++i)
     {
-        (*IDbuffer)[i] = storedBlock_ArrayRecord->array[i].blockID;
-    }
+        *IDbuffer = (short *)malloc(sizeof(short) * RBT_data_array_element_number); // 因為只傳 pointer 會錯 (推測編譯器是拒絕在不知道是 array 的情況下用[i] ?)，所以還是分記憶體
+        for(int i = 0; i < RBT_data_array_element_number; ++i)
+            (*IDbuffer)[i] = RBT_data_array[i]; 
+    }   
 }
 
 //依照方塊編號大小排序資料庫 // (似乎不用用到，但應該很好用！)
@@ -582,7 +581,7 @@ struct tNode* return_root(){
 
 void store_data(struct tNode *curNode){
     int count=0;
-    RBT_data_array=malloc((node_count+1)*sizeof(int));
+    RBT_data_array=malloc((node_count+1)*sizeof(short));
     char max_print[50], now_print[49]={0,'\0'};
     struct tNode* M=find_root(curNode);
     curNode=M;
@@ -592,18 +591,16 @@ void store_data(struct tNode *curNode){
         if(curNode->Lchild!=NULL && strcmp(curNode->Lchild->blockData->blockName, now_print)>0) curNode=curNode->Lchild;
         else if(strcmp(curNode->blockData->blockName, now_print)>0){
             strcpy(now_print, curNode->blockData->blockName);
+            *(RBT_data_array+count)=curNode->blockData->blockIndexInArray = count; // 紀錄在 array 的第幾個
             *(RBT_data_array+(count++))=curNode->blockData->blockID;
         }
         else if(curNode->Rchild!=NULL && strcmp(curNode->Rchild->blockData->blockName, now_print)>0) curNode=curNode->Rchild;
         else curNode=curNode->parent;
     }
     *(RBT_data_array+count)=-1;//stop
-    // for(int* i=RBT_data_array; *i!=-1; i++) printf("%d ", *i);
+   RBT_data_array_element_number = count; // 記住元素總數
 }
 
-int* get_data_array(){
-    return RBT_data_array;
-}
 
 private void cp_itsRelation(struct tNode *curNode){//cp: check and print
     printf("%p\t", curNode->blockData);
