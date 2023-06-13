@@ -13,9 +13,16 @@
 #define private static
 #define public
 
+// debug用 (第一個是要 print 的東西，第二個是 "%d" 之類的)
+#define DEBUG_PRINT(n, conversionSpceifier) fprintf(stderr, #n ": " conversionSpceifier "\n", n);SDL_Delay(100);
+#define P printf("*file: %s, func: %s, line: %d\n", __FILE__, __func__, __LINE__)
+
 // windows大小 + 名字
 #define WINDOWS_NAME "2D-Craft"
 enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
+
+// 沒有方塊的編號
+#define NO_BLOCK_ID -9 //no block = -9
 
 // 位置資訊，用 x,y 一起比較方便
 struct pos
