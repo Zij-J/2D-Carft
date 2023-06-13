@@ -48,7 +48,7 @@ struct tNode{
     struct tNode *Rchild;
     struct tNode *parent;
     SIDE side;//parent's L or R child
-}*root;
+}*root, *first;
 
 struct tNode* RBT_init();//initiallize
 void insert(struct tNode *, blockBase_Data*);//insert the node to red black tree
@@ -60,7 +60,7 @@ private void check(struct tNode*);
 private void left_rotate(struct tNode*);
 private void right_rotate(struct tNode*);
 void store_data(struct tNode *);//store blockID to array
-struct tNode* return_root();
+private void cp_itsRelation(struct tNode *);
 
 int *RBT_data_array;
 
@@ -168,6 +168,7 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
         storedBlock_ArrayRecord->array[index].next = NULL;
 
         //RBTree
+        root=find_root(root);
         insert(root, &(storedBlock_ArrayRecord->array[index])); // 取位置運算的優先級較高，所以要括號！
         
         index++;
@@ -177,8 +178,11 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
             storedBlock_ArrayRecord->maxSize *= 2;
             storedBlock_ArrayRecord->array = (blockBase_Data *)realloc(storedBlock_ArrayRecord->array, sizeof(blockBase_Data) * storedBlock_ArrayRecord->maxSize);
         }
-    }    
+    }
     storedBlock_ArrayRecord->storedSize = index;
+    root=find_root(root);
+    // printf("line: %d, n:%s, p:%p, r:%p\n", __LINE__, root->blockData->blockName, root->parent, root);
+    store_data(root);
 
     //依照方塊名稱排序
     qsort(storedBlock_ArrayRecord->array, storedBlock_ArrayRecord->storedSize, sizeof(blockBase_Data), compareTextures);
@@ -199,7 +203,7 @@ public void TextureBase_Init(SDL_Renderer *renderer)
     char *blockFolderPath = getPictureFolderPath();
 
     //RBTree
-    root=RBT_init();
+    first=RBT_init();
 
     // 從圖片資料夾開啟方塊
     TextureBase_GetAllBlock(blockFolderPath, renderer);
@@ -248,7 +252,6 @@ public SDL_Texture *TextureBase_GetTextureName(char* textureName) // unused
     }
     return NULL;
 } 
-
 
 // 依編號取得圖片
 SDL_Texture *TextureBase_GetTextureUsingID(short blockID)
@@ -366,29 +369,10 @@ public bool TextureBase_isFindBlockBySearchWords()
     // 取得搜尋文字
     char* textureName = SearchWords_GetSearchingWords();
 
-    /*
-    // 比較
-    for (int i = 0; i < IDtoNameBase->storedSize; ++i)
-    {
-        if (strcmp(IDtoNameBase->array[i].blockName, textureName) == 0)
-        {
-            searchedBlockID = IDtoNameBase->array[i].blockID; // 在這邊記住 ID 就不用再找一次！
-            return true;
-        }
-            
-    }
-    blockBase_Data* current = IDtoNameBase->head;
-    while (current != NULL)
-    {
-        if (strcmp(current->blockName, textureName) == 0)
-            return true;
-        current = current->next;
-    }
-    return false;
-    */
+    //find if exist or not
     blockBase_Data tmp = {.blockName=textureName};
     struct tNode* ifexist = find(root, &tmp);
-    printf("ok!");
+    // printf("ok!");
     if(ifexist==NULL) return false;
     else{
         searchedBlockIndex = ifexist->blockData->blockID;
@@ -459,15 +443,16 @@ private struct tNode* create_tNode(blockBase_Data *blockData, struct tNode* Pare
 }
 
 struct tNode* RBT_init(){
-    struct tNode *root=create_tNode(NULL, NULL, NONE);
-    root->color=BLACK;
-    return root;
+    struct tNode *first=create_tNode(NULL, NULL, NONE);
+    first->color=BLACK;
+    root=first;
+    return first;
 }
 
 void insert(struct tNode *curNode, blockBase_Data *blockData) {
-    //if(curNode != NULL) 
-        // DEBUG_PRINT(curNode, "%p");
     if(curNode->blockData != NULL && curNode->blockData->blockName != NULL){
+        // DEBUG_PRINT(blockData->blockName, "%s");
+        // DEBUG_PRINT(curNode->blockData->blockName, "%s.");
         if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return;
         else if(strcmp(blockData->blockName, curNode->blockData->blockName)<0){
             if(curNode->Lchild==NULL){
@@ -494,13 +479,6 @@ void insert(struct tNode *curNode, blockBase_Data *blockData) {
 }
 
 struct tNode* find(struct tNode *curNode, blockBase_Data *blockData){
-    P;
-    store_data(root);
-    P;
-    for(int *i=RBT_data_array; *i!=-1; i++) printf("%d ", *i);
-    P;
-    printf("location: %p, %p.\n", root, curNode);
-    if(curNode->blockData->blockName == NULL) printf("NULL\n");
     if(curNode==NULL) return NULL;
     if(strcmp(blockData->blockName, curNode->blockData->blockName)==0) return curNode;
     else if(strcmp(blockData->blockName, curNode->blockData->blockName)>0) find(curNode->Rchild, blockData);
@@ -542,6 +520,7 @@ private void check(struct tNode *curNode){
             }
         }
     }
+
 }
 
 private void left_rotate(struct tNode *curNode){
@@ -602,7 +581,8 @@ struct tNode* return_root(){
 }
 
 void store_data(struct tNode *curNode){
-    int count=0, *RBT_data_array=malloc((node_count+1)*sizeof(int));
+    int count=0;
+    RBT_data_array=malloc((node_count+1)*sizeof(int));
     char max_print[50], now_print[49]={0,'\0'};
     struct tNode* M=find_root(curNode);
     curNode=M;
@@ -618,8 +598,17 @@ void store_data(struct tNode *curNode){
         else curNode=curNode->parent;
     }
     *(RBT_data_array+count)=-1;//stop
+    // for(int* i=RBT_data_array; *i!=-1; i++) printf("%d ", *i);
 }
 
 int* get_data_array(){
     return RBT_data_array;
+}
+
+private void cp_itsRelation(struct tNode *curNode){//cp: check and print
+    printf("%p\t", curNode->blockData);
+    curNode->color==RED ? printf("RED\t") : printf("BLACK\t");
+    curNode->Lchild ? printf("L:%p\t",curNode->Lchild->blockData) : printf("L:NULL\t");
+    curNode->parent ? printf("p:%p\t",curNode->parent->blockData) : printf("p:NULL\t");
+    curNode->Rchild ? printf("R:%p\n",curNode->Rchild->blockData) : printf("R:NULL\n");
 }

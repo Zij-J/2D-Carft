@@ -13,6 +13,7 @@ bool TextureBase_isFindBlockBySearchWords();// 依搜尋文字，找找看是否
 int TextureBase_GetSearchedBlockIndex();// 把搜尋到材質資料庫的第幾個回傳
 void TextureBase_GetAllID(short **IDbuffer, int *totalBlockNum);// 取得材質資料庫所有的材質ID
 SDL_Texture *TextureBase_GetTextureUsingID(short blockID); // 要有 ID 找到 SDL_Texture 的功能！
+int* get_data_array();
 
 // unused // 最終沒用到，但很好用！
 void TextureBase_DeleteTexture(const char* textureName); //刪除指定圖片
