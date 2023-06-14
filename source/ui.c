@@ -241,7 +241,10 @@ public void Backpack_UpdateBlockToHotbar(SDL_Event event)
 
         // 用 cursor 位置取 index, 更新 now，搞定
         int nowBackpackIndex = backpack_cursorPosition.x + backpack_cursorPosition.y * BACKPACK_WIDTH_CELL_NUM;
-        (*now).BlockID = totalBlockID[nowBackpackIndex];
+        if(nowBackpackIndex <= totalIDnum -1) // 要換0-base
+            (*now).BlockID = totalBlockID[nowBackpackIndex];
+        else
+            (*now).BlockID = NO_BLOCK_ID; // 超過背包範圍，給 NO_BLOCK_ID
     }
 }   
 
