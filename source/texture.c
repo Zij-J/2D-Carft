@@ -5,11 +5,11 @@
 #include "../include/texture.h" // 要放的
 #include <string.h>
 #include <dirent.h>
-#include <unistd.h>
 #include <io.h>
 
 #define INIT_ARRAY_SIZE 100
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
+#define BLOCK_PICTURE_FOLDER_RELATIVE_PATH "./block_pictures"
 
 struct blockDataBase_Texture
 {
@@ -65,15 +65,6 @@ private void store_data(struct tNode *);//store blockID to array
 private void cp_itsRelation(struct tNode *);
 
 
-// 取得圖片資料夾路徑
-private char *getPictureFolderPath()
-{
-    char buffer[MAX_ABBSOULTE_PATH_LENGTH];
-    getcwd(buffer, sizeof(buffer)); // 取得目前工作目錄
-    strcat(buffer, "/block_pictures/"); // 接到 block_pictures 資料夾裡，就完成
-    return strdup(buffer);
-}
-
 //複製資料夾方塊名稱
 private char* duplicateString(const char* str)
 {
@@ -118,21 +109,18 @@ private SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
 }
 
 //從圖片資料夾匯入圖片並依名稱排序
-private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *renderer)
+private void TextureBase_GetAllBlock(SDL_Renderer *renderer)
 {
     DIR *dir;
     struct dirent *entry;
     char filePath[MAX_ABBSOULTE_PATH_LENGTH];
-
-    dir = opendir(folderPath);
-    if (dir == NULL)
+    if ((dir = opendir(BLOCK_PICTURE_FOLDER_RELATIVE_PATH)) == NULL) // 開資料夾路徑(可以開相對路徑！)
     {
-        fprintf(stderr, "Failed to open directory: %s\n", folderPath);
-        return;
+        fprintf(stderr, "Failed to open folder: %s\n", BLOCK_PICTURE_FOLDER_RELATIVE_PATH);
+        return ;
     }
 
     int index = 0;  //方塊資料庫索引
-
     
     SDL_size backpackCellNum = Backpack_GetBlockNumberInWidthAndHeight(); // 取得背包格子總數，資料庫的方塊不能比他多
     int totalCellnum = backpackCellNum.width * backpackCellNum.height;
@@ -148,10 +136,10 @@ private void TextureBase_GetAllBlock(const char *folderPath, SDL_Renderer *rende
             continue;
 
         // Construct the full file path
-        snprintf(filePath, sizeof(filePath), "%s/%s", folderPath, entry->d_name);
+        snprintf(filePath, sizeof(filePath), "%s/%s", BLOCK_PICTURE_FOLDER_RELATIVE_PATH, entry->d_name); 
 
-        // load Texture 應該是在這裡？
-        SDL_Texture *texture = loadTexture(filePath, renderer);
+        // load Texture 應該是在這裡
+        SDL_Texture *texture = loadTexture(filePath, renderer); // 可以開相對路徑！
         if (!texture)
             continue;
 
@@ -199,14 +187,11 @@ public void TextureBase_Init(SDL_Renderer *renderer)
     storedBlock_ArrayRecord->maxSize = INIT_ARRAY_SIZE;
     storedBlock_ArrayRecord->head = NULL;
 
-    // 取得資料夾路徑
-    char *blockFolderPath = getPictureFolderPath();
-
     //RBTree
     first=RBT_init();
 
     // 從圖片資料夾開啟方塊
-    TextureBase_GetAllBlock(blockFolderPath, renderer);
+    TextureBase_GetAllBlock(renderer);
 }
 
 // 清除資料庫

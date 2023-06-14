@@ -1,6 +1,5 @@
 /* 相機、與 renderer 相關 function */
 #include <dirent.h>                     // 取得所有 subfile (.ttf) 時用
-#include <unistd.h>                     // 取得目前的工作 path (才能知道 subfile) 用
 #include "../SDL2/SDL_ttf.h"            // 此 source file 需要特別使用 ttf 擴充套件
 #include "../include/basicSetting.h"    // 要用的
 #include "../include/SDL_StartAndEnd.h" // 要用的
@@ -9,6 +8,7 @@
 #include "../include/ui.h"              // 要用的
 #include "../include/render.h"          // 要放的
 
+#define ASSETS_FOLDER_RELATIVE_PATH "./assets"
 #define DEFULT_ARRAY_SIZE 2            // 預設可擴充 Array 大小，設為2
 #define FONT_DEFULT_PIXEL_QUALITY 72   // font 開啟時文字預設大小，會依此去縮放，所以愈大愈好
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
@@ -16,7 +16,7 @@
 #define MAX_CAMERA_MOVE_SPEED 2       // 相機最大移動速度 (每一秒移動多少像素)
 #define CAMERA_MOVE_ACCLERATION 5     // 相機移動加速度 (每一毫秒加速度)
 #define BACKGROUND_SLOWER_TIMES 10 // 背景比相機慢幾倍
-#define SEARCH_NOTIFY_DISAPPEAR_MILISECOND 2000 // 提醒文字幾豪秒會不見
+#define SEARCH_NOTIFY_DISAPPEAR_MILISECOND 1000 // 提醒文字幾豪秒會不見
 SDL_Renderer *renderer;
 
 // 記住的文字 Font、成功失敗文字、暫停文字、背景、地圖 cursor、快捷欄cursor、快捷欄
@@ -133,17 +133,15 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
 // 取得各種素材的位置用(副檔名不用加 .) (失敗回傳 NULL)
 private char *GetAssetsInFolder(const char *folderName, const char *extensionName)
 {
-    // 開 file path 名字 buffer、建立到 font 資料夾的絕對路徑
-    char path[MAX_ABBSOULTE_PATH_LENGTH]; // 這個一下就結束了，不太需要優化，所以 buffer 直接開超大就好
-    getcwd(path, sizeof(path));           // 取得目前工作目錄
-    char pathToFolder[MAX_ABBSOULTE_PATH_LENGTH]; sprintf(pathToFolder, "/assets/%s/", folderName);
-    strcat(path, pathToFolder);           // 接到要開的資料夾裡
+    // 開 file path 名字 buffer、建立到 font 資料夾的相對路徑
+    char path[MAX_ABBSOULTE_PATH_LENGTH]; 
+    sprintf(path, "%s/%s/", ASSETS_FOLDER_RELATIVE_PATH, folderName);
     
-    // 打開 dir
+    // 打開 dir (都是用相對路徑了！)
     DIR *dir;
     if ((dir = opendir(path)) == NULL)
     {
-        fprintf(stderr, "Failed to open folder: %s\n", path);
+        fprintf(stderr, "Failed to open folder: %s\n", ASSETS_FOLDER_RELATIVE_PATH);
         return NULL;
     }
 
@@ -163,11 +161,11 @@ private char *GetAssetsInFolder(const char *folderName, const char *extensionNam
 
         // 是否最後四個字(副檔名) 是 我們要的
         char fullExtension[MAX_ABBSOULTE_PATH_LENGTH]; sprintf(fullExtension, ".%s", extensionName);
-        if (strcmp(fileName_lastWords, fullExtension) == 0)              
-            return  strcat(path, (*fileData).d_name);  // 接到 目前路徑，回傳 + 結束 loop
+        if (strcmp(fileName_lastWords, fullExtension) == 0) 
+            return strdup(strcat(path, (*fileData).d_name));  // 接到 目前路徑，回傳 + 結束 loop       
     }
     // 到此，代表沒找到
-    fprintf(stderr, "Can't find any .%s file in %s\n", extensionName, path);
+    fprintf(stderr, "Can't find any .%s file in %s\n", extensionName, ASSETS_FOLDER_RELATIVE_PATH);
     return NULL;
 }
 
@@ -527,10 +525,6 @@ public void SearchWords_GetInputWord(SDL_Event event)
             if (!SDL_isprint(event.key.keysym.sym))
                 return;
 
-            // 如果輸入到 e，會開關到背包，需要再開關一次、調回來 (所以在輸入 search 文字時開關背包會失效，要 cursor 移出 search 文字才行)
-            if (event.key.keysym.sym == SDLK_e)
-                Backpack_Switch(event);
-
             // 把輸入轉成 char + 小寫轉大寫
             char inputChar = (char)event.key.keysym.sym;
             if ('a' <= inputChar && inputChar <= 'z')
@@ -684,6 +678,11 @@ public void Render_RenderSearchNotify()
 
     // 大小，位置確定
     SDL_Rect wordRect = Render_GetWordsTotalRect(noticeContents[shownNoticeIndex], rectPos, rectSize);
+
+    // 畫出底色
+    SDL_Color maskColor = Backpack_GetSearchNotifygroundColor();
+    SDL_SetRenderDrawColor(renderer, maskColor.r, maskColor.g, maskColor.b, maskColor.a); // 設定要畫的顏色
+    SDL_RenderFillRect(renderer, &wordRect); // 畫出來！ (FillRect會畫在最上方，符合所需)
 
     // 顯示此段字
     SDL_RenderCopy(renderer, searchNotify_Texture[shownNoticeIndex], NULL, &wordRect);

@@ -24,9 +24,10 @@
 #define SEARCH_NOTIFY_POSITION (SDL_position){.x = 160, .y = 115} // 提醒文字的預設位置
 #define SEARCH_NOTIFY_SIZE (SDL_size){.height = 25, .width = 25} // 提醒文字。一個字的預設大小(方形)
 #define SEARCH_NOTIFY_SUCCESS_COLOR (SDL_Color){.r = 51, .g = 255, .b = 51, .a = 255} // 提醒文字(成功)的預設顏色
-#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 51, .b = 51, .a = 255} // 提醒文字(失敗)的預設顏色
+#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 0, .b = 0, .a = 255} // 提醒文字(失敗)的預設顏色
 #define SEARCH_NOTIFY_SUCCESS_WORD "Tha Block is here!" // 提醒文字(成功)的內容
 #define SEARCH_NOTIFY_FAILURE_WORD "no Block named as this!" // 提醒文字(失敗)的內容
+#define SEARCH_NOTIFY_BACKGROUND_COLOR (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 120} // 提醒文字背景的預設顏色
 #define PAUSE_WORD_SIZE (SDL_size){.height = 100, .width = 100} // 暫停文字的大小 (位置是置中，所以不給調)
 #define PAUSE_WORD_COLOR (SDL_Color){.r = 175, .g = 175, .b = 175, .a = 255} // 暫停文字的預設顏色
 #define PAUSE_WORD "PAUSED" // 暫停文字的內容
@@ -34,6 +35,7 @@
 
 
 private bool backpack_isOn = false; // 背包是否開啟
+private bool backpack_isFreshOpen = false; // 背包是否「剛」開啟 (剛開啟時會按 E ，如果在開起的迴圈就讀，會讀到此而出錯，所以第一次loop就不讀)
 private cursorArea backpack_cursorArea = nothingArea; // 紀錄 cursor 在哪區
 private SDL_position backpack_cursorPosition = {.x = POS_NOT_EXISTS, .y = POS_NOT_EXISTS};
 
@@ -134,7 +136,10 @@ public void Backpack_Switch(SDL_Event event)
             return ;
 
         if(backpack_isOn == false)
+        {
             backpack_isOn = true;
+            backpack_isFreshOpen = true; // 剛開啟
+        }
         else
         {
             backpack_isOn = false;
@@ -251,11 +256,18 @@ void Backpack_FindBlockAndMoveCursor(SDL_Window *window, SDL_Event event)
     int blockPos_x = (FoundBlockIndex % BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
     int blockPos_y = (FoundBlockIndex / BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
     SDL_WarpMouseInWindow(window, blockAreaStartPos.x + blockPos_x + cellSize.width/2, blockAreaStartPos.y + blockPos_y + cellSize.height/2);
+    SDL_FreeCursor(SDL_GetCursor()); // 把 cursor 切換回來，要 free 
 }
 
 // 有輸入，再執行
 public bool Backpack_isInput(SDL_Event event)
 {
+    if(backpack_isFreshOpen == true) // 才剛開起，強制不偵測輸入
+    {
+        backpack_isFreshOpen = false;
+        return false;
+    }
+
     if(event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
         return true;
     else
@@ -429,6 +441,11 @@ void Backpack_GetSearchNotifyContent(char **array)
 {
     array[searchNotifyIndex_success] = SEARCH_NOTIFY_SUCCESS_WORD;
     array[searchNotifyIndex_failure] = SEARCH_NOTIFY_FAILURE_WORD;
+}
+// 回傳 提醒文字 被景色
+SDL_Color Backpack_GetSearchNotifygroundColor()
+{
+    return SEARCH_NOTIFY_BACKGROUND_COLOR;
 }
 
 

@@ -1,16 +1,17 @@
 # For Users 
 ## How to Run this program?
 1. First off, download the whole project file.
-2. You can change the picture in `block_picture` to get your favorite
+2. You can change the picture in `block_picture` to get your favorite image as a block in game
+     - the image must have an English name otherwise the game will fail to open it (but the game still be able to run).
 3. The final step different from platform
-- Windows:
-  - just run `main.exe` and enjoy the game!
-- Linux and Mac:
-  - make sure you have the [gcc compiler](https://gcc.gnu.org/)
-  - open the terminal in your system, 
-  - use `cd` command to go to this folder
-  - run `make`, you will get a program named `main.out`
-  - run `main.out` and enjoy the game!
+   - Windows:
+     - just run `main.exe` and enjoy the game!
+   - Linux and Mac:
+     - make sure you have the [gcc compiler](https://gcc.gnu.org/)
+     - open the terminal in your system, 
+     - use `cd` command to go to this folder
+     - run `make`, you will get a program named `main.out`
+     - run `main.out` and enjoy the game!
 # 給程式設計師
 ## 如何使用 Git & Github
 - 參考資料：

@@ -46,6 +46,7 @@ SDL_position Backpack_GetSearchNotifyPosition();
 SDL_size Backpack_GetSearchNotifySize();
 void Backpack_GetSearchNotifyColor(SDL_Color *array);
 void Backpack_GetSearchNotifyContent(char **array);
+SDL_Color Backpack_GetSearchNotifygroundColor();
 SDL_size PauseScreen_GetPauseWordSize();
 SDL_Color PauseScreen_GetPauseWordColor();
 char *PauseScreen_GetPauseWordContent();
