@@ -11,3 +11,7 @@
 # 忽略 所有地圖檔，但保留 .gitkeep (只是空檔案，讓 git 紀錄有 map 資料夾存在)
 /map/*
 !/map/*.gitkeep
+
+# 忽略 IDtoName 設定，但保留 .gitkeep (只是空檔案，讓 git 紀錄有 block_data 資料夾存在)
+/block_data/*
+!/block_data/*.gitkeep

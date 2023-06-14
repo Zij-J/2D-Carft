@@ -1,16 +1,29 @@
 # For Users 
 ## How to Run this program?
 1. First off, download the whole project file.
-2. You can change the picture in `block_picture` to get your favorite
+2. You can change the picture in `block_picture` to get your favorite image as a block in game
+     - the image must have an English name otherwise the game will fail to open it (but the game still be able to run).
 3. The final step different from platform
-- Windows:
-  - just run `main.exe` and enjoy the game!
-- Linux and Mac:
-  - make sure you have the [gcc compiler](https://gcc.gnu.org/)
-  - open the terminal in your system, 
-  - use `cd` command to go to this folder
-  - run `make`, you will get a program named `main.out`
-  - run `main.out` and enjoy the game!
+   - Windows:
+     - just run `main.exe` and enjoy the game!
+   - Linux and Mac:
+     - make sure you have the [gcc compiler](https://gcc.gnu.org/)
+     - open the terminal in your system, 
+     - use `cd` command to go to this folder
+     - run `make`, you will get a program named `main.out`
+     - run `main.out` and enjoy the game!
+## What file is Changable?
+1. `assets`'s png and ttf files
+     - `backpack` and `hotbar` are not recommanded to change
+2. `block_pictures`'s png files
+3. `block_data`'s txt file
+4. `map`'s bin files
+- If the game crash after adding, deleting or modifing these file, **check the console for the reason** (we try our best detecting possible reasons)
+  - In Windows and Linux, the console will be open when the game start
+  - In Mac, you must use your terminal running the game to get these error message 
+
+
+
 # 給程式設計師
 ## 如何使用 Git & Github
 - 參考資料：

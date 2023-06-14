@@ -1,5 +1,6 @@
 /* map大陣列(需存地圖上絕對位置)、地圖file、地圖cursor 與 相關 function (file I/O：map file)*/
 #include "../include/basicSetting.h" // 在這邊 include 就ok！不然include map.h 會重複 inlude 到 basicSetting.h (但因為有寫預防措施所以其實ok，只是這樣比較統一)
+#include "../include/texture.h"
 #include "../include/render.h"
 #include "../include/ui.h"
 #include "../include/map.h"
@@ -63,8 +64,19 @@ private void Map_Finput(int n, int x, int y){
             }
         }
         if(y==0) // y == 0 才是水平的map
+        {
+            static short usableID = NO_BLOCK_ID;
+            if(usableID == NO_BLOCK_ID) // 隨便取到能用的作為地板(一定有一個能用)
+            {
+                short *buffer = NULL; int num;
+                TextureBase_GetAllID(&buffer, &num);
+                usableID = buffer[0];
+            }
+            
             for(int j=0; j<ARRAY_MAP_WIDTH; j++)
-                map[n][TOTAL_BLOCK_NUMBER_IN_HEIGHT-1 -1][j]=/*GRASS_NUM*/1; // 地板比畫面最下面高一格，個人覺得比較好看！
+                map[n][TOTAL_BLOCK_NUMBER_IN_HEIGHT-1 -1][j]=usableID; // 地板比畫面最下面高一格，個人覺得比較好看！
+        }
+            
     }
     else{//if file exist before
         fseek(fp[n], 0, SEEK_SET);

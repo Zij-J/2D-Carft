@@ -5,10 +5,11 @@
 #include "./include/ui.h"
 #include "./include/map.h"
 #include "./include/render.h"
+#include "./SDL2/SDL_Main.h"
 #undef main
 
 // main函式
-int main(void) 
+int main(int argc, char*argv[]) 
 {
     // 創立所有 SDL 需要的東西
     SDL_Window* window; 
@@ -34,7 +35,7 @@ int main(void)
         // 按 esc，切換是否暫停 (在最後才暫停，確保暫停時所有畫面都被保留)
         if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
             SDL_SwitchPause();
-    
+
         // 暫停中，不執行以下功能
         if(SDL_GetPauseBool() == true)
             continue;
@@ -74,9 +75,6 @@ int main(void)
                     // 按 enter，依目前的字去搜尋
                     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
                     {
-                        /*test
-                        int *tmp= store_data(return_root());
-                        for(; *tmp!=-1; tmp++) printf("%d ", *tmp);*/
 
                         // 搜尋方塊(找到回傳 true)，把 cursor 移到那個方塊上，印 找到了 文字
                         if(TextureBase_isFindBlockBySearchWords() == true)
@@ -116,11 +114,10 @@ int main(void)
         // 畫出畫面，迴圈結束
         SDL_RenderPresent(renderer);
     }
-
     // 結束程式
     Render_Clear();
     Map_Clear();
     HotBar_Clear();
     TextureBase_Clear();
-    SDL_EndAll_StopProgram();
+    SDL_EndAll_StopProgram(true);
 }

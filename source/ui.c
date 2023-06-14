@@ -6,14 +6,14 @@
 
 
 // 所有 ui 的位置、大小、顏色資訊都在此
-#define BACKPACK_POSITION (SDL_position){.x = 160, .y = 140} // 背包的預設位置
+#define BACKPACK_POSITION (SDL_position){.x = WINDOW_WIDTH/2 - Backpack_GetSize().width/2, .y = WINDOW_HEIGHT/2 - Backpack_GetSize().height/2} // 背包的預設位置
 #define BACKPACK_CELL_SIZE (SDL_size){.height = 40, .width = 40} // 一格背包的預設大小
 #define BACKPACK_MARGIN_SIZE (SDL_size){.height = 9, .width = 9} // 背包格子外面的邊界大小
 #define BACKPACK_WIDTH_CELL_NUM 9 // 背包寬有幾格
 #define BACKPACK_HEIGHT_CELL_NUM 3 // 背包高有幾格
 #define BACKPACK_BLOCK_IN_CELL_SIZE (SDL_size){.height = 24, .width = 24} // 一格背包裡面的方塊的預設大小 (位置預設置中，不給調)
 #define BACKPACK_SEARCH_AREA_SIZE (SDL_size){.height = 40, .width = 40 * BACKPACK_WIDTH_CELL_NUM} // 搜尋區域的大小
-#define HOTBAR_POSITION (SDL_position){.x = 160, .y = 425} // 快捷欄的預設位置
+#define HOTBAR_POSITION (SDL_position){.x = WINDOW_WIDTH/2 - Hotbar_GetSize().width/2, .y = WINDOW_HEIGHT -  Hotbar_GetSize().height} // 快捷欄的預設位置
 #define HOTBAR_CELL_SIZE (SDL_size){.height = 40, .width = 40} // 一格快捷欄的預設大小
 #define HOTBAR_MARGIN_SIZE (SDL_size){.height = 9, .width = 9} // 快捷欄格子外面的邊界大小
 #define HOTBAR_CELL_NUM 9 // 快捷鍵有幾格 
@@ -24,9 +24,10 @@
 #define SEARCH_NOTIFY_POSITION (SDL_position){.x = 160, .y = 115} // 提醒文字的預設位置
 #define SEARCH_NOTIFY_SIZE (SDL_size){.height = 25, .width = 25} // 提醒文字。一個字的預設大小(方形)
 #define SEARCH_NOTIFY_SUCCESS_COLOR (SDL_Color){.r = 51, .g = 255, .b = 51, .a = 255} // 提醒文字(成功)的預設顏色
-#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 51, .b = 51, .a = 255} // 提醒文字(失敗)的預設顏色
+#define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 0, .b = 0, .a = 255} // 提醒文字(失敗)的預設顏色
 #define SEARCH_NOTIFY_SUCCESS_WORD "Tha Block is here!" // 提醒文字(成功)的內容
 #define SEARCH_NOTIFY_FAILURE_WORD "no Block named as this!" // 提醒文字(失敗)的內容
+#define SEARCH_NOTIFY_BACKGROUND_COLOR (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 120} // 提醒文字背景的預設顏色
 #define PAUSE_WORD_SIZE (SDL_size){.height = 100, .width = 100} // 暫停文字的大小 (位置是置中，所以不給調)
 #define PAUSE_WORD_COLOR (SDL_Color){.r = 175, .g = 175, .b = 175, .a = 255} // 暫停文字的預設顏色
 #define PAUSE_WORD "PAUSED" // 暫停文字的內容
@@ -34,6 +35,7 @@
 
 
 private bool backpack_isOn = false; // 背包是否開啟
+private bool backpack_isFreshOpen = false; // 背包是否「剛」開啟 (剛開啟時會按 E ，如果在開起的迴圈就讀，會讀到此而出錯，所以第一次loop就不讀)
 private cursorArea backpack_cursorArea = nothingArea; // 紀錄 cursor 在哪區
 private SDL_position backpack_cursorPosition = {.x = POS_NOT_EXISTS, .y = POS_NOT_EXISTS};
 
@@ -134,7 +136,10 @@ public void Backpack_Switch(SDL_Event event)
             return ;
 
         if(backpack_isOn == false)
+        {
             backpack_isOn = true;
+            backpack_isFreshOpen = true; // 剛開啟
+        }
         else
         {
             backpack_isOn = false;
@@ -236,7 +241,10 @@ public void Backpack_UpdateBlockToHotbar(SDL_Event event)
 
         // 用 cursor 位置取 index, 更新 now，搞定
         int nowBackpackIndex = backpack_cursorPosition.x + backpack_cursorPosition.y * BACKPACK_WIDTH_CELL_NUM;
-        (*now).BlockID = totalBlockID[nowBackpackIndex];
+        if(nowBackpackIndex <= totalIDnum -1) // 要換0-base
+            (*now).BlockID = totalBlockID[nowBackpackIndex];
+        else
+            (*now).BlockID = NO_BLOCK_ID; // 超過背包範圍，給 NO_BLOCK_ID
     }
 }   
 
@@ -251,11 +259,18 @@ void Backpack_FindBlockAndMoveCursor(SDL_Window *window, SDL_Event event)
     int blockPos_x = (FoundBlockIndex % BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
     int blockPos_y = (FoundBlockIndex / BACKPACK_WIDTH_CELL_NUM) * cellSize.width;
     SDL_WarpMouseInWindow(window, blockAreaStartPos.x + blockPos_x + cellSize.width/2, blockAreaStartPos.y + blockPos_y + cellSize.height/2);
+    SDL_FreeCursor(SDL_GetCursor()); // 把 cursor 切換回來，要 free 
 }
 
 // 有輸入，再執行
 public bool Backpack_isInput(SDL_Event event)
 {
+    if(backpack_isFreshOpen == true) // 才剛開起，強制不偵測輸入
+    {
+        backpack_isFreshOpen = false;
+        return false;
+    }
+
     if(event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
         return true;
     else
@@ -429,6 +444,11 @@ void Backpack_GetSearchNotifyContent(char **array)
 {
     array[searchNotifyIndex_success] = SEARCH_NOTIFY_SUCCESS_WORD;
     array[searchNotifyIndex_failure] = SEARCH_NOTIFY_FAILURE_WORD;
+}
+// 回傳 提醒文字 被景色
+SDL_Color Backpack_GetSearchNotifygroundColor()
+{
+    return SEARCH_NOTIFY_BACKGROUND_COLOR;
 }
 
 

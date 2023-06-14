@@ -21,7 +21,14 @@ headers := $(wildcard include/*.h)
 outs := $(notdir $(source))
 outs := main.o $(addprefix source\, $(outs))
 
-# del command 要依作業系統不同玵而變
+# 編譯指令也是要依作業系統不同而變，因-mwindows(用於隱藏 console 只能用於 windows，Mac 預設不會開啟 console 所以沒問題)-mwindows 
+ifeq ($(OS),Windows_NT)
+	compileCommand := gcc $(codes) $(dlls) -o $(exe)
+else
+	compileCommand := gcc $(codes) $(dlls) -o $(exe)
+endif
+
+# del command 要依作業系統不同而變
 ifeq ($(OS),Windows_NT)
 	delCommand := del $(outs)
 else
@@ -30,7 +37,7 @@ endif
 
 # 輸入任何東西都要檢查是否 $(codes) 的東西變過 (.dll 在執行時也要被看見，所以必須噢 .exe 放於同一檔)
 all: $(codes)
-	gcc $(codes) $(dlls) -o $(exe)
+	$(compileCommand)
 
 
 # 檢查 是否% .o 的東西變過 時，就檢查 %.c 是否變過，有了話就編譯(沒link)
