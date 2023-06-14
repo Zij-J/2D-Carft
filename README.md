@@ -12,7 +12,17 @@
      - use `cd` command to go to this folder
      - run `make`, you will get a program named `main.out`
      - run `main.out` and enjoy the game!
-## I want to modify the User Interface
+## What file is Changable?
+1. `assets`'s png and ttf files
+     - `backpack` and `hotbar` are not recommanded to change
+2. `block_pictures`'s png files
+3. `block_data`'s txt file
+4. `map`'s bin files
+- If the game crash after adding, deleting or modifing these file, **check the console for the reason** (we try our best detecting possible reasons)
+  - In Windows and Linux, the console will be open when the game start
+  - In Mac, you must use your terminal running the game to get these error message 
+
+
 
 # 給程式設計師
 ## 如何使用 Git & Github

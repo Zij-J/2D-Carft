@@ -23,7 +23,7 @@
 
 // windows大小 + 名字
 #define WINDOWS_NAME "2D-Craft"
-enum sizeOfWindow {WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720};
+enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
 
 // 沒有方塊的編號
 #define NO_BLOCK_ID -9 //no block = -9

@@ -50,14 +50,6 @@ void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
     }
     rememberedWindow = *window;
 
-
-    
-    // 縮小化提醒視窗 (因為這些提醒訊息需要被知道，所以用此)
-    #ifdef _WIN32 // 只有 windows 才需要，須請 Mac 去
-        HWND consoleWindow = GetConsoleWindow();
-        ShowWindow(consoleWindow, SW_MINIMIZE);
-    #endif
-
     // Create renderer
     *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
     if ((*renderer) == NULL) 
@@ -71,6 +63,12 @@ void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer)
     }
     rememberedRenderer = *renderer;
     
+    // 縮小化提醒視窗 (因為這些提醒訊息需要被知道，所以用此)
+    #ifdef _WIN32 // 只有 windows 才需要，須請 Mac 去 terminal 執行才能看見錯誤訊息
+        HWND consoleWindow = GetConsoleWindow();
+        ShowWindow(consoleWindow, SW_MINIMIZE);
+    #endif
+
     // 限制 cursor 位移，避免在遊戲執行時移動視窗，產生的輸入誤判 bug
     SDL_SetWindowMouseGrab(rememberedWindow, SDL_TRUE);
     SDL_Rect rect = RESTICT_CURSOR_RANGE;
