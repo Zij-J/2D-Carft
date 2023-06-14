@@ -3,7 +3,7 @@
 #define START_END_SDL
 
 void SDL_InitializeAll(SDL_Window **window, SDL_Renderer **renderer);
-void SDL_EndAll_StopProgram();
+void SDL_EndAll_StopProgram(bool isSuccess);
 void SDL_SwitchPause();
 bool SDL_GetPauseBool();
 

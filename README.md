@@ -12,6 +12,8 @@
      - use `cd` command to go to this folder
      - run `make`, you will get a program named `main.out`
      - run `main.out` and enjoy the game!
+## I want to modify the User Interface
+
 # 給程式設計師
 ## 如何使用 Git & Github
 - 參考資料：

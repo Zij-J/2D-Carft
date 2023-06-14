@@ -89,44 +89,44 @@ public void Render_Init(SDL_Renderer *rememberedRenderer)
     background_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("background", "png"));
     if(background_texture == NULL)
     {
-        fprintf(stderr, "Failed to open background picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open background picture"));
+        SDL_EndAll_StopProgram(false);
     }
 
     // 載入 mapCursor
     mapCurosr_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("mapCursor", "png"));
     if(background_texture == NULL)
     {
-        fprintf(stderr, "Failed to open mapCurosr picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open mapCurosr picture"));
+        SDL_EndAll_StopProgram(false);
     }
 
     // 載入 hotbar、hotBarCursor
     hotbarCursor_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("hotbarCursor", "png"));
     if(hotbarCursor_texture == NULL)
     {
-        fprintf(stderr, "Failed to open hotbarCursor picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open hotbarCursor picture"));
+        SDL_EndAll_StopProgram(false);
     }
     hotbar_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("hotbar", "png"));
     if(hotbarCursor_texture == NULL)
     {
-        fprintf(stderr, "Failed to open hotbar picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open hotbar picture"));
+        SDL_EndAll_StopProgram(false);
     }
 
     // 載入 背包、背包Cursor
     backpackCursor_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpackCursor", "png"));
     if(backpackCursor_texture == NULL)
     {
-        fprintf(stderr, "Failed to open backpackCursor picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open backpackCursor picture"));
+        SDL_EndAll_StopProgram(false);
     }
     backpack_texture = IMG_LoadTexture(renderer, GetAssetsInFolder("backpack", "png"));
     if(backpackCursor_texture == NULL)
     {
-        fprintf(stderr, "Failed to open backpack picture");
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open backpack picture"));
+        SDL_EndAll_StopProgram(false);
     }
 }
 
@@ -141,7 +141,7 @@ private char *GetAssetsInFolder(const char *folderName, const char *extensionNam
     DIR *dir;
     if ((dir = opendir(path)) == NULL)
     {
-        fprintf(stderr, "Failed to open folder: %s\n", ASSETS_FOLDER_RELATIVE_PATH);
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open folder: %s\n"), ASSETS_FOLDER_RELATIVE_PATH);
         return NULL;
     }
 
@@ -165,7 +165,7 @@ private char *GetAssetsInFolder(const char *folderName, const char *extensionNam
             return strdup(strcat(path, (*fileData).d_name));  // 接到 目前路徑，回傳 + 結束 loop       
     }
     // 到此，代表沒找到
-    fprintf(stderr, "Can't find any .%s file in %s\n", extensionName, ASSETS_FOLDER_RELATIVE_PATH);
+    fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Can't find any .%s file in %s\n"), extensionName, ASSETS_FOLDER_RELATIVE_PATH);
     return NULL;
 }
 
@@ -450,16 +450,16 @@ private void SearchWords_Init()
     // 顯示文字的函式庫，初始化
     if (TTF_Init() < 0)
     {
-        fprintf(stderr, "Failed to open SDL_TTF: %s\n", TTF_GetError());
-        SDL_EndAll_StopProgram();
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open SDL_TTF: %s\n") , TTF_GetError());
+        SDL_EndAll_StopProgram(false);
     }
     // font 要先記住，之後在結束時才能 Close，記住也就不用每次開啟，方便
     font = TTF_OpenFont(GetAssetsInFolder("font", "ttf"), FONT_DEFULT_PIXEL_QUALITY);;
     if (font == NULL)
     {
-        fprintf(stderr, "Failed to open TTF file: %s\n", TTF_GetError());
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open TTF file: %s\n"), TTF_GetError());
         TTF_Quit();
-        SDL_EndAll_StopProgram();
+        SDL_EndAll_StopProgram(false);
     }
 
     // 提醒文字，預先 load 好

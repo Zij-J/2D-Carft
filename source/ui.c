@@ -6,14 +6,14 @@
 
 
 // 所有 ui 的位置、大小、顏色資訊都在此
-#define BACKPACK_POSITION (SDL_position){.x = 160, .y = 140} // 背包的預設位置
+#define BACKPACK_POSITION (SDL_position){.x = WINDOW_WIDTH/2 - Backpack_GetSize().width/2, .y = WINDOW_HEIGHT/2 - Backpack_GetSize().height/2} // 背包的預設位置
 #define BACKPACK_CELL_SIZE (SDL_size){.height = 40, .width = 40} // 一格背包的預設大小
 #define BACKPACK_MARGIN_SIZE (SDL_size){.height = 9, .width = 9} // 背包格子外面的邊界大小
 #define BACKPACK_WIDTH_CELL_NUM 9 // 背包寬有幾格
 #define BACKPACK_HEIGHT_CELL_NUM 3 // 背包高有幾格
 #define BACKPACK_BLOCK_IN_CELL_SIZE (SDL_size){.height = 24, .width = 24} // 一格背包裡面的方塊的預設大小 (位置預設置中，不給調)
 #define BACKPACK_SEARCH_AREA_SIZE (SDL_size){.height = 40, .width = 40 * BACKPACK_WIDTH_CELL_NUM} // 搜尋區域的大小
-#define HOTBAR_POSITION (SDL_position){.x = 160, .y = 425} // 快捷欄的預設位置
+#define HOTBAR_POSITION (SDL_position){.x = WINDOW_WIDTH/2 - Hotbar_GetSize().width/2, .y = WINDOW_HEIGHT -  Hotbar_GetSize().height} // 快捷欄的預設位置
 #define HOTBAR_CELL_SIZE (SDL_size){.height = 40, .width = 40} // 一格快捷欄的預設大小
 #define HOTBAR_MARGIN_SIZE (SDL_size){.height = 9, .width = 9} // 快捷欄格子外面的邊界大小
 #define HOTBAR_CELL_NUM 9 // 快捷鍵有幾格 

@@ -92,7 +92,7 @@ private SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
     SDL_Surface *surface = IMG_Load(filePath);
     if (!surface)
     {
-        fprintf(stderr, "Failed to load image: %s\n", IMG_GetError());
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_YELLOW("Failed to load image: %s\n"), IMG_GetError());
         return NULL;
     }
 
@@ -100,7 +100,7 @@ private SDL_Texture *loadTexture(const char *filePath, SDL_Renderer *renderer)
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture)
     {
-        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to create texture: %s\n"), SDL_GetError());
     }
 
     SDL_FreeSurface(surface);
@@ -116,7 +116,7 @@ private void TextureBase_GetAllBlock(SDL_Renderer *renderer)
     char filePath[MAX_ABBSOULTE_PATH_LENGTH];
     if ((dir = opendir(BLOCK_PICTURE_FOLDER_RELATIVE_PATH)) == NULL) // 開資料夾路徑(可以開相對路徑！)
     {
-        fprintf(stderr, "Failed to open folder: %s\n", BLOCK_PICTURE_FOLDER_RELATIVE_PATH);
+        fprintf(stderr, STRING_LITERAL_IN_PRINTF_RED("Failed to open folder: %s\n"), BLOCK_PICTURE_FOLDER_RELATIVE_PATH);
         return ;
     }
 
@@ -206,8 +206,7 @@ public void TextureBase_Clear()
         free(current);
         current = nextBlock;
     }
-
-    storedBlock_ArrayRecord = NULL;
+    
     storedBlock_ArrayRecord->storedSize = 0;
     storedBlock_ArrayRecord->maxSize = 0;
     free(storedBlock_ArrayRecord->array);

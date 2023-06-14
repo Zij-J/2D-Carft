@@ -17,9 +17,13 @@
 #define DEBUG_PRINT(n, conversionSpceifier) fprintf(stderr, #n ": " conversionSpceifier "\n", n);SDL_Delay(5);
 #define P printf("*file: %s, func: %s, line: %d\n", __FILE__, __func__, __LINE__)
 
+// 不同顏色粗字體，用於 print 錯誤訊息
+#define STRING_LITERAL_IN_PRINTF_RED(n) "\033[1;31m" n "\033[0m" 
+#define STRING_LITERAL_IN_PRINTF_YELLOW(n) "\033[0;33m" n "\033[0m" 
+
 // windows大小 + 名字
 #define WINDOWS_NAME "2D-Craft"
-enum sizeOfWindow {WINDOW_WIDTH = 720, WINDOW_HEIGHT = 480};
+enum sizeOfWindow {WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720};
 
 // 沒有方塊的編號
 #define NO_BLOCK_ID -9 //no block = -9
