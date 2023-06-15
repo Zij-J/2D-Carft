@@ -21,8 +21,10 @@
 - If the game crash after adding, deleting or modifing these file, **check the console for the reason** (we try our best detecting possible reasons)
   - In Windows and Linux, the console will be open when the game start
   - In Mac, you must use your terminal running the game to get these error message 
-
-
+## Some Input Limitation:
+- If you can't input by keyboard, please ensure you are inputting in English.
+- We only support English as search words, and don't support control characters too.
+- You will be able to move the cursor out of the window only when pausing (press `esc` to pause the game).
 
 # 給程式設計師
 ## 如何使用 Git & Github
