@@ -1,7 +1,7 @@
 # For Users 
 ## How to Run this program?
 1. First off, download the whole project file.
-2. You can change the picture in `block_picture` to get your favorite image as a block in game
+2. You can change the picture in `block_pictures` to get your favorite image as a block in game
      - the image must have an English name otherwise the game will fail to open it (but the game still be able to run).
 3. The final step different from platform
    - Windows:
