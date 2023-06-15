@@ -177,8 +177,8 @@ public void Backpack_MoveCursor()
     SDL_position searchAeraStartPos = {.x = blockAeraStartPos.x, .y = blockAeraStartPos.y + cellSize.height * BACKPACK_HEIGHT_CELL_NUM + marginSize.height};
 
     // 檢查滑鼠是否在圖塊的範圍內
-    if ((mouseX >= blockAeraStartPos.x && mouseX <= blockAeraStartPos.x + cellSize.width * BACKPACK_WIDTH_CELL_NUM) 
-        && (mouseY >= blockAeraStartPos.y && mouseY <= blockAeraStartPos.y + cellSize.height * BACKPACK_HEIGHT_CELL_NUM)) 
+    if ((mouseX >= blockAeraStartPos.x && mouseX < blockAeraStartPos.x + cellSize.width * BACKPACK_WIDTH_CELL_NUM) 
+        && (mouseY >= blockAeraStartPos.y && mouseY < blockAeraStartPos.y + cellSize.height * BACKPACK_HEIGHT_CELL_NUM)) // 在右邊界不能等於，會使 cursor 在下一行顯示
     {
         backpack_cursorArea = blockArea;
         // 記住 index 就可
