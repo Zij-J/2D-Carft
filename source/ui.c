@@ -21,7 +21,7 @@
 #define SEARCH_WORD_POSITION (SDL_position){.x = Backpack_GetBlockStartPosition().x +10, .y = Backpack_GetBlockStartPosition().y + BACKPACK_CELL_SIZE.height * BACKPACK_HEIGHT_CELL_NUM + BACKPACK_MARGIN_SIZE.height + 8} // 搜尋文字的預設位置
 #define SEARCH_WORD_SIZE (SDL_size){.height = 30, .width = 30} // 搜尋文字。一個字的預設大小(方形)
 #define SEARCH_WORD_COLOR (SDL_Color){.r = 25, .g = 25, .b = 25, .a = 255} // 搜尋文字的預設顏色
-#define SEARCH_NOTIFY_POSITION (SDL_position){.x = 160, .y = 115} // 提醒文字的預設位置
+#define SEARCH_NOTIFY_POSITION (SDL_position){.x = BACKPACK_POSITION.x, .y = BACKPACK_POSITION.y - SEARCH_NOTIFY_SIZE.height} // 提醒文字的預設位置
 #define SEARCH_NOTIFY_SIZE (SDL_size){.height = 25, .width = 25} // 提醒文字。一個字的預設大小(方形)
 #define SEARCH_NOTIFY_SUCCESS_COLOR (SDL_Color){.r = 51, .g = 255, .b = 51, .a = 255} // 提醒文字(成功)的預設顏色
 #define SEARCH_NOTIFY_FAILURE_COLOR (SDL_Color){.r = 255, .g = 0, .b = 0, .a = 255} // 提醒文字(失敗)的預設顏色
