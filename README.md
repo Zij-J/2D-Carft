@@ -8,7 +8,7 @@ Place & Remove blocks (left/right mouse click + mouse wheel)
 **Backpack & Search!** (keybord e):  
 ![alt text](readme_images/backpack_search.gif)     
 **Custom blocks!** (try adding `.png` in `./block_pictures`):  
-![alt text](readme_images/custom_block.gif)
+![alt text](readme_images/custom_block.gif)  
 **Move & Infinite Map!** (keyboard w,a,s,d):  
 ![alt text](readme_images/move_map.gif)
 ## How to Run this program?
