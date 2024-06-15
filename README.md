@@ -1,4 +1,16 @@
 # For Users 
+## 2D-Craft
+![alt text](readme_images/Intro.png)
+**2D-Craft is a pure C + SDL2 game mimicing block placing mechanic of Minecraft in 2D.** This is a final project of programming course in CS and the answer of "How elements in game *moves*? How can Minecraft has *infinite map*?" from our team. 
+### Featuring...
+Pause & Exit (keyborad esc)  
+Place & Remove blocks (left/right mouse click + mouse wheel)  
+**Backpack & Search!** (keybord e): 
+![alt text](readme_images/backpack_search.gif)     
+**Custom blocks!** (try adding `.png` in `./block_pictures`)  
+![alt text](readme_images/custom_block.gif)
+**Move & Infinite Map!** (keyboard w,a,s,d):
+![alt text](readme_images/move_map.gif)
 ## How to Run this program?
 1. First off, download the whole project file.
 2. You can change the picture in `block_pictures` to get your favorite image as a block in game
@@ -114,6 +126,13 @@ git remote rename origin <新名字>
   ```
   git branch -d branch_name
   ```
+- 不小心在錯的分支修改
+  ```
+  git stash
+  git checkout <對的分支>
+  git stash pop
+  ```
+  就能暫存 changes 然後在正確的分支復原
 ### **檢視一些 Git 東西**
 - 檢視現在工作的 **branch** + 修改過，但未 commmit 的檔案
     ```
