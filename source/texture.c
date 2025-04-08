@@ -6,7 +6,11 @@
 #include "../include/texture.h" // 要放的
 #include <string.h>
 #include <dirent.h>
-#include <io.h>
+#ifdef _WIN32
+    #include <io.h>
+#else
+    #include <sys/io.h>
+#endif
 
 #define INIT_ARRAY_SIZE 2
 #define MAX_ABBSOULTE_PATH_LENGTH 4096 // 這是 UNIX 絕對路徑最大值，Windows 只有 255
