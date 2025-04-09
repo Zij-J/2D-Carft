@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h> // for bool type
+#include <string.h> // render 與 map 都用到，算常用~
 #include "../SDL2/SDL.h" //..會回到上層資料夾，就可以再找SDL2
 #include "../SDL2/SDL_image.h"
 

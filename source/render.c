@@ -378,7 +378,7 @@ public void Render_RenderSearchWords()
         // 取得字大小
         SDL_size originalSize;
         char nowCharToString[2];
-        sprintf(nowCharToString, "%c\0", (*searchWords).words[i]);                      // 怕只能處理 string，所以要轉成 string
+        sprintf(nowCharToString, "%c", (*searchWords).words[i]);                        // 怕只能處理 string，所以要轉成 string (轉完會自動補 \0)
         TTF_SizeText(font, nowCharToString, &originalSize.width, &originalSize.height); // 取得 font 原本大小
         float widthScaling = (float)wordSize.height / (float)originalSize.height;       // 換成 float ，處理縮放
         wordSize.width = originalSize.width * widthScaling;                             // height 就是用給的，但 width 需要依 height 去伸縮 (每個字 width 不同)
@@ -544,7 +544,7 @@ public void SearchWords_GetInputWord(SDL_Event event)
             // 存入(Texture)
             SDL_Color wordColor = Backpack_GetSearchWordColor(); // 取得文字顏色
             char InputtedcharToString[2];
-            sprintf(InputtedcharToString, "%c\0", inputChar);                                        // 怕只能處理 string，所以要轉成 string
+            sprintf(InputtedcharToString, "%c", inputChar); // sprintf 轉完會自動補 \0                                        // 怕只能處理 string，所以要轉成 string
             SDL_Surface *wordsSerface = TTF_RenderText_Solid(font, InputtedcharToString, wordColor); // 只能畫在 serface
             SDL_Texture *wordsTexture = SDL_CreateTextureFromSurface(renderer, wordsSerface);        // serface 轉 texture
             SDL_FreeSurface(wordsSerface);                                                           // serface 沒用了
