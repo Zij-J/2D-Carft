@@ -431,6 +431,11 @@ git remote rename origin <新名字>
 - `SDL2_image.dll`、`SDL2.dll`：是**已編譯好的 SDL 函式庫**，我們的 `.exe` 要執行必須要用他們，所以需與 `.exe` 放於同一層資料夾中
 
 - **新增 SDL_TFF**：請依照之前安裝 SDL_image 的步驟，從 [這裡](https://github.com/libsdl-org/SDL_ttf/releases) 安裝 SDL_TFF，此是 SDL 顯示文字的擴充套件，支援 `.tff` 檔 (TrueTypeFormat)，會比用圖片顯示文字方便 (不確定效能是否比較好，但這個 `.dll` 不知為何如此巨大)
+
+## 專案 flow chart
+![alt text](readme_images/2D-craft流程圖(完成版).png)     
+
+
 ## Minecraft 2D 素材 (160 x 160)
 - https://minecraft.fandom.com/wiki/List_of_block_textures
 ## Flow Chart 繪製工具：
