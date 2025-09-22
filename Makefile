@@ -12,12 +12,12 @@ dlls := SDL2.dll SDL2_image.dll SDL2_ttf.dll
 ifeq ($(OS),Windows_NT)
 	exe := main.exe
 else
-	exe := main
+	exe := main.out
 endif
 
 # header 變動也要處理！用 wildcard 就可處理全部在 include 內的.h
 headers := $(wildcard include/*.h)
-# 這是刪除的路徑(因為 windows 的 del 強迫要用 \ 當路徑，只能再改，用 notdir 只提出檔名，再用 addprefix 把新路徑加上去)
+# 這是 Windows 刪除的路徑(因為 windows 的 del 強迫要用 \ 當路徑，只能再改，用 notdir 只提出檔名，再用 addprefix 把新路徑加上去)
 outs := $(notdir $(source))
 outs := main.o $(addprefix source\, $(outs))
 
@@ -25,14 +25,14 @@ outs := main.o $(addprefix source\, $(outs))
 ifeq ($(OS),Windows_NT)
 	compileCommand := gcc $(codes) $(dlls) -o $(exe)
 else
-	compileCommand := gcc $(codes) $(dlls) -o $(exe)
+	compileCommand := gcc $(codes) -lSDL2 -lSDL2_image -lSDL2_ttf -o $(exe)
 endif
 
 # del command 要依作業系統不同而變
 ifeq ($(OS),Windows_NT)
 	delCommand := del $(outs)
 else
-	delCommand := rm -rf $(outs)
+	delCommand := rm -rf $(codes)
 endif
 
 # 輸入任何東西都要檢查是否 $(codes) 的東西變過 (.dll 在執行時也要被看見，所以必須噢 .exe 放於同一檔)

@@ -20,6 +20,14 @@ Place & Remove blocks (left/right mouse click + mouse wheel)
      - just run `main.exe` and enjoy the game!
    - Linux and Mac:
      - make sure you have the [gcc compiler](https://gcc.gnu.org/)
+     - install development version of [SDL2](https://wiki.libsdl.org/SDL2/FrontPage), [SDL2_image](https://github.com/libsdl-org/SDL_image), and [SDL2_ttf](https://github.com/libsdl-org/SDL_ttf) libraries
+       - As said in [SDL2 offical wiki](https://wiki.libsdl.org/SDL2/Installation), try installing though package manage first. Maybe just a few commands can get this done! For example,  
+       `sudo apt-get install libsdl2-dev`,  
+       `sudo apt-get install libsdl2-image-dev`, and   
+       `sudo apt-get install libsdl2-ttf-dev`.    
+         
+          > Tips: try `apt-cache search --names-only 'libsdl2*'` to examie if some packages exists in `apt` repos or not.
+        - Delete `SDL2.dll`, `SDL2_image.dll`, `SDL2_ttf.dll`, and `main.exe` in the project. They are executables for Windows, useless!
      - open the terminal in your system, 
      - use `cd` command to go to this folder
      - run `make`, you will get a program named `main.out`
